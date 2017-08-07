@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="filename">/var/log/camera-dashboard/camera-dashboard.log</Property>
+    </Properties>
+    <ThresholdFilter level="INFO"/>
+
+    <Appenders>
+        <Console name="STDOUT">
+            <PatternLayout pattern="%d [%t] %c{1.}: %M %m %ex%n"/>
+        </Console>
+        <File name="File" fileName="${filename}">
+            <PatternLayout>
+                <pattern>%d [%t] %c{1.}: %M %m %ex%n</pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="trace">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="File"/>
+        </Root>
+    </Loggers>
+</Configuration>
