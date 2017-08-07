@@ -9,7 +9,7 @@
     </formats>
     <fileSets>
         <fileSet>
-            <directory>src/assembly/base/</directory>
+            <directory>src/main/assembly/base/</directory>
             <includes>
                 <include>**/*</include>
             </includes>

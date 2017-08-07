@@ -205,7 +205,7 @@
                     <finalName>${artifactId}</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                     <descriptors>
-                        <descriptor>src/assembly/distribution.xml</descriptor>
+                        <descriptor>src/main/assembly/distribution.xml</descriptor>
                     </descriptors>
                 </configuration>
                 <executions>
