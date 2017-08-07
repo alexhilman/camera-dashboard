@@ -4,3 +4,4 @@ target/
 .idea/
 
 src/main/java/com/alexhilman/cameradashboard/ui/App.gwt.xml
+src/main/assembly/base/conf/*.properties
