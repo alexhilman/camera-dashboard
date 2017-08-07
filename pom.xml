@@ -94,6 +94,12 @@
             <version>9.3.20.v20170531</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.alexhilman.cameradashboard.driver.dlink</groupId>
+            <artifactId>dcs-936-driver</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
 
         <dependency>
             <groupId>junit</groupId>
