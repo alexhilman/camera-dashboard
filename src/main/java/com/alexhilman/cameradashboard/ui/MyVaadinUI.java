@@ -32,7 +32,7 @@ public class MyVaadinUI extends UI {
 
     @WebServlet(urlPatterns = {"/*"}, name = "MyVaadinServlet", asyncSupported = true)
     @VaadinServletConfiguration(ui = MyVaadinUI.class, productionMode = false)
-    @PackagesToScan(value = "com.alexhilman.cameradashboard")
+    @PackagesToScan(value = "com.alexhilman.cameradashboard.ui")
     @CameraDashboardInitializer
     public static class MyVaadinServlet extends GuiceVaadinServlet {
     }
