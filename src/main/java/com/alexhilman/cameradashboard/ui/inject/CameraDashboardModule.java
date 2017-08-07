@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 
 /**
  */
-public class MyModule extends AbstractModule {
+public class CameraDashboardModule extends AbstractModule {
     @Override
     protected void configure() {
     }

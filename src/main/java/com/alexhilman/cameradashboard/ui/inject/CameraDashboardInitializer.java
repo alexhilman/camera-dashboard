@@ -4,6 +4,6 @@ import com.vaadin.guice.annotation.Import;
 
 /**
  */
-@Import(value = MyModule.class)
+@Import(value = CameraDashboardModule.class)
 public @interface CameraDashboardInitializer {
 }
