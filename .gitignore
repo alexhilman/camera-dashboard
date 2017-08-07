@@ -2,3 +2,5 @@ target/
 
 **/*.iml
 .idea/
+
+src/main/java/com/alexhilman/cameradashboard/ui/App.gwt.xml
