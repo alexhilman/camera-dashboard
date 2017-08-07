@@ -1,6 +1,6 @@
 package com.alexhilman.cameradashboard.ui;
 
-import com.alexhilman.cameradashboard.ui.inject.VaadinModules;
+import com.alexhilman.cameradashboard.ui.inject.CameraDashboardInitializer;
 import com.alexhilman.cameradashboard.ui.layout.RootLayout;
 import com.alexhilman.cameradashboard.ui.view.ErrorView;
 import com.alexhilman.cameradashboard.ui.view.ViewContainer;
@@ -33,7 +33,7 @@ public class MyVaadinUI extends UI {
     @WebServlet(urlPatterns = {"/*"}, name = "MyVaadinServlet", asyncSupported = true)
     @VaadinServletConfiguration(ui = MyVaadinUI.class, productionMode = false)
     @PackagesToScan(value = "com.alexhilman.cameradashboard")
-    @VaadinModules
+    @CameraDashboardInitializer
     public static class MyVaadinServlet extends GuiceVaadinServlet {
     }
 }
