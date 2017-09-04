@@ -11,6 +11,8 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -142,6 +144,23 @@ public class VideoFileManagerIT {
 
         final List<File> movies = videoFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
-        assertThat(movies.get(0).getName(), is(tmpfile.getName()));
+        assertThat(movies.get(0).getAbsolutePath(), endsWith("/rotating/cam1/" + tmpfile.getName()));
+        assertThat(movies.get(0).exists(), is(true));
+    }
+
+    @Test
+    public void shouldSaveMovieMovingItFromRotatingToSavedStorage() throws IOException {
+        final File tmpfile = new File("/tmp/2017-04-01 00:00:00.mov");
+        tmpfile.createNewFile();
+
+        videoFileManager.addMovieToRotatingPool("cam1", tmpfile);
+
+        final List<File> rotatingMovies = videoFileManager.listRotatingMovies();
+        assertThat(rotatingMovies, hasSize(1));
+
+        videoFileManager.saveMovie(rotatingMovies.get(0));
+        final List<File> savedMovies = videoFileManager.listSavedMovies();
+        assertThat(savedMovies, hasSize(1));
+        assertThat(savedMovies.get(0).getAbsolutePath(), endsWith("/saved/cam1/" + tmpfile.getName()));
     }
 }

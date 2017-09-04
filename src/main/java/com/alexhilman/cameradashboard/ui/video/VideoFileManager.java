@@ -104,7 +104,26 @@ public class VideoFileManager {
             throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
         }
 
-        movieFile.renameTo(newFile);
+        if (!movieFile.renameTo(newFile)) {
+            throw new RuntimeException("Could not rename/move file " + movieFile.getAbsolutePath() + " to " + newFile.getAbsolutePath());
+        }
+    }
+
+    public void saveMovie(final File movieFile) {
+        checkNotNull(movieFile, "movieFile cannot be null");
+        checkArgument(movieFile.exists(), "movieFile must exist");
+        checkArgument(movieFile.getAbsolutePath().contains(getRotatingDirectory().getAbsolutePath()),
+                      "movieFile must be in the rotating directory");
+
+        final File cameraDir = new File(getSavedDirectory(), movieFile.getParentFile().getName());
+        mkDirsIfMissing(cameraDir);
+
+        final File newFile = new File(getSavedDirectory(),
+                                      movieFile.getParentFile().getName() + "/" + movieFile.getName());
+
+        if (!movieFile.renameTo(newFile)) {
+            throw new RuntimeException("Could not rename/move file " + movieFile.getAbsolutePath() + " to " + newFile.getAbsolutePath());
+        }
     }
 
     private List<File> listCameraMovies(final File rotatingDir) {
@@ -145,5 +164,9 @@ public class VideoFileManager {
 
     public File getRotatingDirectory() {
         return new File(storageDirectory, "rotating");
+    }
+
+    public File getSavedDirectory() {
+        return new File(storageDirectory, "saved");
     }
 }
