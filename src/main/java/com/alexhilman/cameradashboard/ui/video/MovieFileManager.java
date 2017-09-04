@@ -18,13 +18,13 @@ import static java.util.stream.Collectors.toList;
 /**
  */
 @Singleton
-public class VideoFileManager {
+public class MovieFileManager {
     private final File storageDirectory;
     private final File rotatingDirectory;
     private final File savedDirectory;
 
     @Inject
-    public VideoFileManager(final String storageDirectory) {
+    public MovieFileManager(final String storageDirectory) {
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
         mkDirsIfMissing(this.storageDirectory);

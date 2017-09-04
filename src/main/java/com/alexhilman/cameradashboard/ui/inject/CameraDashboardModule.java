@@ -1,6 +1,6 @@
 package com.alexhilman.cameradashboard.ui.inject;
 
-import com.alexhilman.cameradashboard.ui.video.VideoFileManager;
+import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.google.inject.AbstractModule;
 
 import java.util.Properties;
@@ -20,6 +20,6 @@ public class CameraDashboardModule extends AbstractModule {
     @Override
     @SuppressWarnings("PointlessBinding")
     protected void configure() {
-        bind(VideoFileManager.class);
+        bind(MovieFileManager.class);
     }
 }

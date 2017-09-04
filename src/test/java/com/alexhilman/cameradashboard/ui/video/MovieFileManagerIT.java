@@ -11,23 +11,22 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
-public class VideoFileManagerIT {
-    private VideoFileManager videoFileManager;
+public class MovieFileManagerIT {
+    private MovieFileManager movieFileManager;
 
     @Before
     public void setup() {
-        videoFileManager = new VideoFileManager("/tmp/.cameradashboard");
+        movieFileManager = new MovieFileManager("/tmp/.cameradashboard");
     }
 
     @After
     public void tearDown() {
-        recurseDelete(videoFileManager.getStorageDirectory());
+        recurseDelete(movieFileManager.getStorageDirectory());
     }
 
     private void recurseDelete(final File file) {
@@ -48,14 +47,14 @@ public class VideoFileManagerIT {
 
     @Test
     public void shouldGetStorageDirectory() {
-        final File dir = videoFileManager.getStorageDirectory();
+        final File dir = movieFileManager.getStorageDirectory();
 
         assertThat(dir, is(notNullValue()));
     }
 
     @Test
     public void shouldListRotatingCameraVideos() throws IOException {
-        final File storageDirectory = videoFileManager.getStorageDirectory();
+        final File storageDirectory = movieFileManager.getStorageDirectory();
 
         final File rotatingDirectory = new File(storageDirectory, "rotating");
         rotatingDirectory.mkdir();
@@ -70,7 +69,7 @@ public class VideoFileManagerIT {
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
 
-        final List<File> files = videoFileManager.listRotatingMovies();
+        final List<File> files = movieFileManager.listRotatingMovies();
 
         assertThat(files, is(notNullValue()));
         assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
@@ -78,7 +77,7 @@ public class VideoFileManagerIT {
 
     @Test
     public void shouldListSavedCameraVideos() throws IOException {
-        final File storageDirectory = videoFileManager.getStorageDirectory();
+        final File storageDirectory = movieFileManager.getStorageDirectory();
 
         final File savedDirectory = new File(storageDirectory, "saved");
         savedDirectory.mkdir();
@@ -93,7 +92,7 @@ public class VideoFileManagerIT {
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
 
-        final List<File> files = videoFileManager.listSavedMovies();
+        final List<File> files = movieFileManager.listSavedMovies();
 
         assertThat(files, is(notNullValue()));
         assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
@@ -101,7 +100,7 @@ public class VideoFileManagerIT {
 
     @Test
     public void shouldListAllMovies() throws IOException {
-        final File storageDirectory = videoFileManager.getStorageDirectory();
+        final File storageDirectory = movieFileManager.getStorageDirectory();
 
         final File savedDirectory = new File(storageDirectory, "saved");
         savedDirectory.mkdir();
@@ -129,7 +128,7 @@ public class VideoFileManagerIT {
         cam1Movie2.createNewFile();
         cam2Movie2.createNewFile();
 
-        final List<File> files = videoFileManager.listAllMovies();
+        final List<File> files = movieFileManager.listAllMovies();
 
         assertThat(files, is(notNullValue()));
         assertThat(files, containsInAnyOrder(cam1Movie2, cam2Movie2, cam1Movie1, cam2Movie1));
@@ -140,9 +139,9 @@ public class VideoFileManagerIT {
         final File tmpfile = new File("/tmp/2017-04-01 00:00:00.mov");
         tmpfile.createNewFile();
 
-        videoFileManager.addMovieToRotatingPool("cam1", tmpfile);
+        movieFileManager.addMovieToRotatingPool("cam1", tmpfile);
 
-        final List<File> movies = videoFileManager.listAllMovies();
+        final List<File> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
         assertThat(movies.get(0).getAbsolutePath(), endsWith("/rotating/cam1/" + tmpfile.getName()));
         assertThat(movies.get(0).exists(), is(true));
@@ -153,13 +152,13 @@ public class VideoFileManagerIT {
         final File tmpfile = new File("/tmp/2017-04-01 00:00:00.mov");
         tmpfile.createNewFile();
 
-        videoFileManager.addMovieToRotatingPool("cam1", tmpfile);
+        movieFileManager.addMovieToRotatingPool("cam1", tmpfile);
 
-        final List<File> rotatingMovies = videoFileManager.listRotatingMovies();
+        final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
 
-        videoFileManager.saveMovie(rotatingMovies.get(0));
-        final List<File> savedMovies = videoFileManager.listSavedMovies();
+        movieFileManager.saveMovie(rotatingMovies.get(0));
+        final List<File> savedMovies = movieFileManager.listSavedMovies();
         assertThat(savedMovies, hasSize(1));
         assertThat(savedMovies.get(0).getAbsolutePath(), endsWith("/saved/cam1/" + tmpfile.getName()));
     }
