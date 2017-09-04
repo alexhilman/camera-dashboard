@@ -20,12 +20,20 @@ import static java.util.stream.Collectors.toList;
 @Singleton
 public class VideoFileManager {
     private final File storageDirectory;
+    private final File rotatingDirectory;
+    private final File savedDirectory;
 
     @Inject
     public VideoFileManager(final String storageDirectory) {
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
         mkDirsIfMissing(this.storageDirectory);
+
+        rotatingDirectory = new File(storageDirectory, "rotating");
+        mkDirsIfMissing(rotatingDirectory);
+
+        savedDirectory = new File(storageDirectory, "saved");
+        mkDirsIfMissing(savedDirectory);
     }
 
     File getStorageDirectory() {
@@ -163,10 +171,10 @@ public class VideoFileManager {
     }
 
     public File getRotatingDirectory() {
-        return new File(storageDirectory, "rotating");
+        return rotatingDirectory;
     }
 
     public File getSavedDirectory() {
-        return new File(storageDirectory, "saved");
+        return savedDirectory;
     }
 }
