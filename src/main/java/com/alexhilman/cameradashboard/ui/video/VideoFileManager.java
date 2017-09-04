@@ -11,6 +11,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.stream.Collectors.toList;
 
@@ -24,11 +25,7 @@ public class VideoFileManager {
     public VideoFileManager(final String storageDirectory) {
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
-        if (!this.storageDirectory.exists()) {
-            if (!this.storageDirectory.mkdirs()) {
-                throw new IllegalStateException("Cannot create storage directory: " + storageDirectory);
-            }
-        }
+        mkDirsIfMissing(this.storageDirectory);
     }
 
     File getStorageDirectory() {
@@ -94,6 +91,22 @@ public class VideoFileManager {
                      .orElse(Collections.emptyList());
     }
 
+    public void addMovie(final String cameraName, final File movieFile) {
+        checkNotNull(cameraName, "cameraName cannot be null");
+        checkNotNull(movieFile, "movieFile cannot be null");
+        checkArgument(movieFile.exists(), "movieFile must exist");
+
+        final File cameraDir = new File(getRotatingDirectory(), cameraName);
+        mkDirsIfMissing(cameraDir);
+
+        final File newFile = new File(cameraDir, movieFile.getName());
+        if (newFile.exists()) {
+            throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
+        }
+
+        movieFile.renameTo(newFile);
+    }
+
     private List<File> listCameraMovies(final File rotatingDir) {
         final File[] rotatingCameraDirectories = rotatingDir.listFiles();
         if (rotatingCameraDirectories == null) {
@@ -116,5 +129,21 @@ public class VideoFileManager {
         }
 
         return Lists.newArrayList(files);
+    }
+
+    private void mkDirsIfMissing(final File dir) {
+        if (!dir.exists()) {
+            mkDirsOrThrow(dir);
+        }
+    }
+
+    private void mkDirsOrThrow(final File directory) {
+        if (!directory.mkdirs()) {
+            throw new IllegalStateException("Cannot create storage directory: " + directory);
+        }
+    }
+
+    public File getRotatingDirectory() {
+        return new File(storageDirectory, "rotating");
     }
 }

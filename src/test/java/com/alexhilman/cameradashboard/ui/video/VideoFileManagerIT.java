@@ -11,6 +11,7 @@ import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -130,5 +131,17 @@ public class VideoFileManagerIT {
 
         assertThat(files, is(notNullValue()));
         assertThat(files, containsInAnyOrder(cam1Movie2, cam2Movie2, cam1Movie1, cam2Movie1));
+    }
+
+    @Test
+    public void shouldSaveMovieForCamera() throws IOException {
+        final File tmpfile = new File("/tmp/2017-04-01 00:00:00.mov");
+        tmpfile.createNewFile();
+
+        videoFileManager.addMovie("cam1", tmpfile);
+
+        final List<File> movies = videoFileManager.listAllMovies();
+        assertThat(movies, hasSize(1));
+        assertThat(movies.get(0).getName(), is(tmpfile.getName()));
     }
 }
