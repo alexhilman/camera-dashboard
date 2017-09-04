@@ -1,12 +1,18 @@
 package com.alexhilman.cameradashboard.ui;
 
 import com.google.common.base.Strings;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ShutdownHandler;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -17,6 +23,8 @@ import static com.google.common.base.Preconditions.checkState;
  * Hello world!
  */
 public class App {
+    private static final Logger LOG = LoggerFactory.getLogger(App.class);
+
     public static final int PORT = 9090;
     public static final String CAMERAS_CONFIG_FILE = "cameras.json";
     public static final String DASHBOARD_CONFIG_FILE = "camera-dashboard.properties";
@@ -43,7 +51,21 @@ public class App {
             webAppContext.addServlet(MyVaadinUI.MyVaadinServlet.class, "/*");
             webAppContext.setBaseResource(Resource.newClassPathResource("webapp"));
 
-            server.setHandler(webAppContext);
+            final ShutdownHandler shutdownHandler = new ShutdownHandler("dccb2e0d-3f38-4ba1-9d05-4e810294aa18",
+                                                                        true,
+                                                                        true);
+
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                try {
+                    shutdownHandler.sendShutdown();
+                } catch (IOException e) {
+                    LOG.error("Could not send shutdown", e);
+                }
+            }));
+
+            final HandlerList handlerList = new HandlerList();
+            handlerList.setHandlers(new Handler[]{shutdownHandler, webAppContext});
+            server.setHandler(handlerList);
 
             server.start();
 //            System.out.println(server.dump());
@@ -97,12 +119,20 @@ public class App {
         checkState(dashboardConfigFile.exists(), DASHBOARD_CONFIG_FILE + " file does not exist");
 
         final Properties tempProperties = new Properties();
+        final String storageLocation;
         try (final InputStream inputStream = new FileInputStream(dashboardConfigFile)) {
             tempProperties.load(inputStream);
-            final String storageLocation = tempProperties.getProperty("cameradashboard.video.location");
+            storageLocation = tempProperties.getProperty("cameradashboard.video.location");
             checkState(!Strings.isNullOrEmpty(storageLocation), "Property not found: cameradashboard.video.location");
         } catch (Exception e) {
             throw new IllegalStateException("Invalid properties found in " + DASHBOARD_CONFIG_FILE, e);
+        }
+
+        final File storageLocationDirectory = new File(storageLocation);
+        if (!storageLocationDirectory.exists()) {
+            if (!storageLocationDirectory.mkdirs()) {
+                throw new IllegalStateException("Could not make storage location");
+            }
         }
     }
 
