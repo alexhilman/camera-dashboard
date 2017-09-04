@@ -91,7 +91,7 @@ public class VideoFileManager {
                      .orElse(Collections.emptyList());
     }
 
-    public void addMovie(final String cameraName, final File movieFile) {
+    public void addMovieToRotatingPool(final String cameraName, final File movieFile) {
         checkNotNull(cameraName, "cameraName cannot be null");
         checkNotNull(movieFile, "movieFile cannot be null");
         checkArgument(movieFile.exists(), "movieFile must exist");

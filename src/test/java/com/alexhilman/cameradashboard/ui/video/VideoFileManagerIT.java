@@ -134,11 +134,11 @@ public class VideoFileManagerIT {
     }
 
     @Test
-    public void shouldSaveMovieForCamera() throws IOException {
+    public void shouldAddMovie() throws IOException {
         final File tmpfile = new File("/tmp/2017-04-01 00:00:00.mov");
         tmpfile.createNewFile();
 
-        videoFileManager.addMovie("cam1", tmpfile);
+        videoFileManager.addMovieToRotatingPool("cam1", tmpfile);
 
         final List<File> movies = videoFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
