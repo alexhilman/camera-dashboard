@@ -28,7 +28,16 @@ public class App {
         try {
             final Server server = new Server(PORT);
 
-            final WebAppContext webAppContext = new WebAppContext();
+            final WebAppContext webAppContext = new WebAppContext() {
+                @Override
+                protected void doStart() throws Exception {
+                    super.doStart();
+
+                    if (getUnavailableException() != null) {
+                        throw (Exception) getUnavailableException();
+                    }
+                }
+            };
             webAppContext.setDisplayName("Camera Dashboard");
             webAppContext.setContextPath("/");
             webAppContext.addServlet(MyVaadinUI.MyVaadinServlet.class, "/*");
