@@ -72,4 +72,63 @@ public class VideoFileManagerIT {
         assertThat(files, is(notNullValue()));
         assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
     }
+
+    @Test
+    public void shouldListSavedCameraVideos() throws IOException {
+        final File storageDirectory = videoFileManager.getStorageDirectory();
+
+        final File savedDirectory = new File(storageDirectory, "saved");
+        savedDirectory.mkdir();
+
+        final File cam1 = new File(savedDirectory, "cam1");
+        final File cam2 = new File(savedDirectory, "cam2");
+        cam1.mkdirs();
+        cam2.mkdirs();
+
+        final File cam1Movie = new File(cam1, "2017-01-01 00:00:00.mov");
+        final File cam2Movie = new File(cam2, "2017-01-01 00:00:00.mov");
+        cam1Movie.createNewFile();
+        cam2Movie.createNewFile();
+
+        final List<File> files = videoFileManager.listSavedMovies();
+
+        assertThat(files, is(notNullValue()));
+        assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
+    }
+
+    @Test
+    public void shouldListAllMovies() throws IOException {
+        final File storageDirectory = videoFileManager.getStorageDirectory();
+
+        final File savedDirectory = new File(storageDirectory, "saved");
+        savedDirectory.mkdir();
+
+        final File cam1Saved = new File(savedDirectory, "cam1");
+        final File cam2Saved = new File(savedDirectory, "cam2");
+        cam1Saved.mkdirs();
+        cam2Saved.mkdirs();
+
+        final File cam1Movie1 = new File(cam1Saved, "2017-01-01 00:00:00.mov");
+        final File cam2Movie1 = new File(cam2Saved, "2017-01-01 00:00:00.mov");
+        cam1Movie1.createNewFile();
+        cam2Movie1.createNewFile();
+
+        final File rotatingDirectory = new File(storageDirectory, "rotating");
+        rotatingDirectory.mkdir();
+
+        final File cam1Rotating = new File(rotatingDirectory, "cam1");
+        final File cam2Rotating = new File(rotatingDirectory, "cam2");
+        cam1Rotating.mkdirs();
+        cam2Rotating.mkdirs();
+
+        final File cam1Movie2 = new File(cam1Rotating, "2017-01-01 00:00:00.mov");
+        final File cam2Movie2 = new File(cam2Rotating, "2017-01-01 00:00:00.mov");
+        cam1Movie2.createNewFile();
+        cam2Movie2.createNewFile();
+
+        final List<File> files = videoFileManager.listAllMovies();
+
+        assertThat(files, is(notNullValue()));
+        assertThat(files, containsInAnyOrder(cam1Movie2, cam2Movie2, cam1Movie1, cam2Movie1));
+    }
 }
