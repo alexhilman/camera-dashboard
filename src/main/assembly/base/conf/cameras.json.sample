@@ -3,10 +3,10 @@
     {
       "make": "dlink",
       "model": "DCS-936L",
+      "networkAddress": "http://192.168.1.4/",
       "driver": {
         "type": "browser",
-        "implementation": "com.alexhilman.dlink.dcs936.Dcs936Client",
-        "networkAddress": "http://192.168.1.4/"
+        "implementation": "com.alexhilman.dlink.dcs936.Dcs936Client"
       }
     }
   ]
