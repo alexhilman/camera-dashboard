@@ -5,6 +5,7 @@ import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -15,6 +16,7 @@ import java.util.List;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
+@Ignore
 public class CameraFileWatcherIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private CameraFileWatcher cameraFileWatcher;
