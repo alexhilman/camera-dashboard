@@ -7,11 +7,11 @@
 
     <Appenders>
         <Console name="STDOUT">
-            <PatternLayout pattern="%d [%t] %c{1.}: %M %m %ex%n"/>
+            <PatternLayout pattern="%d %p [%t] %c{1.}: %m %ex%n"/>
         </Console>
         <File name="File" fileName="${filename}">
             <PatternLayout>
-                <pattern>%d [%t] %c{1.}: %M %m %ex%n</pattern>
+                <pattern>%d %p [%t] %c{1.}: %m %ex%n</pattern>
             </PatternLayout>
         </File>
     </Appenders>
