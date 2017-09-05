@@ -24,6 +24,7 @@ import static com.google.common.base.Preconditions.checkState;
  */
 public class App {
     private static final Logger LOG = LoggerFactory.getLogger(App.class);
+    private static volatile Properties cameraDashboardProperties;
 
     public static final int PORT = 9090;
     public static final String CAMERAS_CONFIG_FILE = "cameras.json";
@@ -127,6 +128,7 @@ public class App {
         } catch (Exception e) {
             throw new IllegalStateException("Invalid properties found in " + DASHBOARD_CONFIG_FILE, e);
         }
+        cameraDashboardProperties = tempProperties;
 
         final File storageLocationDirectory = new File(storageLocation);
         if (!storageLocationDirectory.exists()) {
@@ -143,5 +145,16 @@ public class App {
         }
 
         return possibleArray;
+    }
+
+    public static Properties getCameraDashboardProperties() {
+        if (cameraDashboardProperties == null) {
+            throw new IllegalStateException(
+                    "Must call validateStateOrThrow() first, I'm sorry the guice-vaadin plugin won't let me define a non-default constructor for the Guice module");
+        }
+
+        final Properties copy = new Properties();
+        copy.putAll(cameraDashboardProperties);
+        return copy;
     }
 }

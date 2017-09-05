@@ -1,25 +1,23 @@
 package com.alexhilman.cameradashboard.ui.inject;
 
+import com.alexhilman.cameradashboard.ui.App;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 
 import java.util.Properties;
-
-import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  */
 public class CameraDashboardModule extends AbstractModule {
-    private final Properties properties;
-
-    public CameraDashboardModule(final Properties properties) {
-        checkNotNull(properties, "properties cannot be null");
-        this.properties = properties;
-    }
-
     @Override
     @SuppressWarnings("PointlessBinding")
     protected void configure() {
+        Names.bindProperties(binder(), readProperties());
         bind(MovieFileManager.class);
+    }
+
+    protected Properties readProperties() {
+        return App.getCameraDashboardProperties();
     }
 }
