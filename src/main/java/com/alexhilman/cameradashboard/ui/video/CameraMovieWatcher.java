@@ -53,8 +53,6 @@ public class CameraMovieWatcher {
                                     downloadNewFiles();
                                 } catch (Exception e) {
                                     LOG.error("Could not fully iterate through new files", e);
-                                }finally {
-                                    LOG.info("Finished run");
                                 }
                             },
                             0,
