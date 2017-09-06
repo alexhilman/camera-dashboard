@@ -120,6 +120,7 @@ public class MovieFileManager {
 
         final File cameraDir = getRotatingDirectoryForCamera(camera);
 
+        // TODO copy to /tmp, then move to rotating pool
         final File newFile = new File(cameraDir,
                                       file.getCreatedInstant()
                                           .atZone(ZoneId.systemDefault())
