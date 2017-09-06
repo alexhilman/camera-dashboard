@@ -1,18 +1,19 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.sun.org.apache.xerces.internal.impl.dv.DTDDVFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -24,6 +25,8 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class MovieFileManager {
+    private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
+
     static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private final File storageDirectory;
@@ -73,7 +76,7 @@ public class MovieFileManager {
      *
      * @return List of saved movies
      */
-    public List<File> listAllMovies() {
+    List<File> listAllMovies() {
         final ArrayList<File> files = Lists.newArrayList(listRotatingMovies());
         files.addAll(listSavedMovies());
 
@@ -82,7 +85,7 @@ public class MovieFileManager {
                     .collect(toList());
     }
 
-    public List<File> listRotatingMovies() {
+    List<File> listRotatingMovies() {
         final File[] firstDirectory = storageDirectory.listFiles();
         if (firstDirectory == null) {
             return Collections.emptyList();
@@ -94,7 +97,7 @@ public class MovieFileManager {
                      .orElse(Collections.emptyList());
     }
 
-    public List<File> listSavedMovies() {
+    List<File> listSavedMovies() {
         final File[] firstDirectory = storageDirectory.listFiles();
         if (firstDirectory == null) {
             return Collections.emptyList();
@@ -124,6 +127,11 @@ public class MovieFileManager {
         if (newFile.exists()) {
             throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
         }
+
+        LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
+                 newFile.getName(),
+                 camera.getName(),
+                 camera.getNetworkAddress());
 
         try (final FileOutputStream outputStream = new FileOutputStream(newFile)) {
             IOStreams.redirect(inputStream, outputStream);
@@ -185,11 +193,11 @@ public class MovieFileManager {
         }
     }
 
-    public File getRotatingDirectory() {
+    File getRotatingDirectory() {
         return rotatingDirectory;
     }
 
-    public File getSavedDirectory() {
+    File getSavedDirectory() {
         return savedDirectory;
     }
 
