@@ -200,6 +200,15 @@ public class MovieFileManagerIT {
         assertThat(lastSavedMovieInstant, is(expectedInstant));
     }
 
+    @Test
+    public void shouldReturnEpochForCameraWhichIsMissingFiles() {
+        final CameraConfiguration cameraConfiguration = readCameraConfig();
+        final Camera camera = cameraConfiguration.getCameras().get(0);
+
+        final Instant instant = movieFileManager.lastMovieInstantFor(camera);
+        assertThat(instant, is(Instant.EPOCH));
+    }
+
     private CameraConfiguration readCameraConfig() {
         final CameraConfiguration cameraConfiguration;
         try {

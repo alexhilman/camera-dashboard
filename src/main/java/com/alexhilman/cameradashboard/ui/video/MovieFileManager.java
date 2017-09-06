@@ -12,11 +12,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -206,13 +202,14 @@ public class MovieFileManager {
         System.arraycopy(rotatingFiles, 0, allFiles, 0, rotatingFiles.length);
         System.arraycopy(savedFiles, 0, allFiles, rotatingFiles.length, savedFiles.length);
 
-        final File latestFile = Arrays.stream(allFiles)
-                                      .reduce((f1, f2) -> f1.getName().compareTo(f2.getName()) > 0 ? f1 : f2)
-                                      .orElseThrow(() -> new RuntimeException("No files were found"));
+        final Optional<File> latestFile = Arrays.stream(allFiles)
+                                                .reduce((f1, f2) -> f1.getName().compareTo(f2.getName()) > 0 ? f1 : f2);
 
-        return LocalDateTime.parse(fileNameWithoutExtension(latestFile), STORAGE_FILE_DATET_TIME_FORMAT)
-                            .atZone(ZoneId.systemDefault())
-                            .toInstant();
+        return latestFile.map(file -> LocalDateTime.parse(fileNameWithoutExtension(file),
+                                                          STORAGE_FILE_DATET_TIME_FORMAT)
+                                                   .atZone(ZoneId.systemDefault())
+                                                   .toInstant())
+                         .orElse(Instant.EPOCH);
     }
 
     File getRotatingDirectoryForCamera(final Camera camera) {
