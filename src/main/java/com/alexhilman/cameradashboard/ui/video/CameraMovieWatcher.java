@@ -19,11 +19,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  */
 @Singleton
-public class CameraFileWatcher {
+public class CameraMovieWatcher {
     private CameraConfiguration cameraConfiguration;
 
     @Inject
-    public CameraFileWatcher(final CameraConfiguration cameraConfiguration) {
+    public CameraMovieWatcher(final CameraConfiguration cameraConfiguration) {
         this.cameraConfiguration = checkNotNull(cameraConfiguration, "cameraConfiguration cannot be null");
     }
 

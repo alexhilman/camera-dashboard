@@ -17,9 +17,9 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 @Ignore
-public class CameraFileWatcherIT {
+public class CameraMovieWatcherIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-    private CameraFileWatcher cameraFileWatcher;
+    private CameraMovieWatcher cameraMovieWatcher;
 
     @Before
     public void setup() {
@@ -32,12 +32,12 @@ public class CameraFileWatcherIT {
             throw new IllegalStateException(e);
         }
 
-        cameraFileWatcher = new CameraFileWatcher(cameraConfiguration);
+        cameraMovieWatcher = new CameraMovieWatcher(cameraConfiguration);
     }
 
     @Test
     public void shouldGetCameras() {
-        final List<Camera> cameras = cameraFileWatcher.getCameras();
+        final List<Camera> cameras = cameraMovieWatcher.getCameras();
 
         assertThat(cameras, hasSize(1));
     }
@@ -45,9 +45,9 @@ public class CameraFileWatcherIT {
     @Test
     public void shouldListNewFilesSinceInstant() {
         final Instant instant = Instant.now().minus(3, ChronoUnit.HOURS);
-        final Camera camera = cameraFileWatcher.getCameras().get(0);
-        final List<DcsFile> files = cameraFileWatcher.select(camera)
-                                                     .listFilesNewerThan(instant);
+        final Camera camera = cameraMovieWatcher.getCameras().get(0);
+        final List<DcsFile> files = cameraMovieWatcher.select(camera)
+                                                      .listFilesNewerThan(instant);
 
         assertThat(files, is(notNullValue()));
         assertThat(files, hasSize(greaterThanOrEqualTo(1)));
