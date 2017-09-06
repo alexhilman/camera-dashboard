@@ -2,12 +2,16 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
+import com.alexhilman.dlink.dcs936.model.DcsFile;
+import com.alexhilman.dlink.dcs936.model.DcsFileType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -146,23 +150,32 @@ public class MovieFileManagerIT {
 
     @Test
     public void shouldAddMovie() throws IOException {
-        final File tmpfile = new File("/tmp/2017-04-01 00:00:00.000.mov");
-        tmpfile.createNewFile();
+        final Instant fileInstant = Instant.now();
 
-        movieFileManager.addMovieToRotatingPool("cam1", tmpfile);
+        final Camera camera = readCameraConfig().getCameras().get(0);
+        movieFileManager.addMovieToRotatingPool(camera,
+                                                new ByteArrayInputStream(new byte[0]),
+                                                "mp4",
+                                                fileInstant);
 
         final List<File> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
-        assertThat(movies.get(0).getAbsolutePath(), endsWith("/rotating/cam1/" + tmpfile.getName()));
+        assertThat(movies.get(0).getAbsolutePath(),
+                   endsWith("/rotating/" + camera.getName() + "/" +
+                                    fileInstant.atZone(ZoneId.systemDefault())
+                                               .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
         assertThat(movies.get(0).exists(), is(true));
     }
 
     @Test
     public void shouldSaveMovieMovingItFromRotatingToSavedStorage() throws IOException {
-        final File tmpfile = new File("/tmp/2017-04-01 00:00:00.000.mov");
-        tmpfile.createNewFile();
+        final Instant fileInstant = Instant.now();
 
-        movieFileManager.addMovieToRotatingPool("cam1", tmpfile);
+        final Camera camera = readCameraConfig().getCameras().get(0);
+        movieFileManager.addMovieToRotatingPool(camera,
+                                                new ByteArrayInputStream(new byte[0]),
+                                                "mp4",
+                                                fileInstant);
 
         final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
@@ -170,7 +183,10 @@ public class MovieFileManagerIT {
         movieFileManager.saveMovie(rotatingMovies.get(0));
         final List<File> savedMovies = movieFileManager.listSavedMovies();
         assertThat(savedMovies, hasSize(1));
-        assertThat(savedMovies.get(0).getAbsolutePath(), endsWith("/saved/cam1/" + tmpfile.getName()));
+        assertThat(savedMovies.get(0).getAbsolutePath(),
+                   endsWith("/saved/" + camera.getName() + "/" +
+                                    fileInstant.atZone(ZoneId.systemDefault())
+                                               .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
     }
 
     @Test

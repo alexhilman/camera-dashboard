@@ -1,12 +1,14 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
+import com.alexhilman.dlink.dcs936.model.DcsFile;
+import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.sun.org.apache.xerces.internal.impl.dv.DTDDVFactory;
 
-import java.io.File;
+import java.io.*;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -104,21 +106,29 @@ public class MovieFileManager {
                      .orElse(Collections.emptyList());
     }
 
-    public void addMovieToRotatingPool(final String cameraName, final File movieFile) {
-        checkNotNull(cameraName, "cameraName cannot be null");
-        checkNotNull(movieFile, "movieFile cannot be null");
-        checkArgument(movieFile.exists(), "movieFile must exist");
+    public void addMovieToRotatingPool(final Camera camera,
+                                       final InputStream inputStream,
+                                       final String fileExtension,
+                                       final Instant fileInstant) {
+        checkNotNull(camera, "camera cannot be null");
+        checkNotNull(inputStream, "inputStream cannot be null");
+        checkNotNull(fileExtension, "fileExtension cannot be null");
+        checkNotNull(fileInstant, "fileInstant cannot be null");
 
-        final File cameraDir = new File(getRotatingDirectory(), cameraName);
-        mkDirsIfMissing(cameraDir);
+        final File cameraDir = getRotatingDirectoryForCamera(camera);
 
-        final File newFile = new File(cameraDir, movieFile.getName());
+        final File newFile = new File(cameraDir,
+                                      fileInstant.atZone(ZoneId.systemDefault())
+                                                 .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + fileExtension);
+
         if (newFile.exists()) {
             throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
         }
 
-        if (!movieFile.renameTo(newFile)) {
-            throw new RuntimeException("Could not rename/move file " + movieFile.getAbsolutePath() + " to " + newFile.getAbsolutePath());
+        try (final FileOutputStream outputStream = new FileOutputStream(newFile)) {
+            IOStreams.redirect(inputStream, outputStream);
+        } catch (Exception e) {
+            throw new RuntimeException("Could not save file", e);
         }
     }
 
@@ -185,14 +195,12 @@ public class MovieFileManager {
 
     public Instant lastMovieInstantFor(final Camera camera) {
         final File rotatingDir = getRotatingDirectoryForCamera(camera);
-        mkDirsIfMissing(rotatingDir);
         final File[] rotatingFiles = rotatingDir.listFiles();
         if (!rotatingDir.isDirectory() || rotatingFiles == null) {
             throw new IllegalStateException(rotatingDir.getAbsolutePath() + " was expected to be a directory");
         }
 
         final File savedDir = getSavedDirectoryForCamera(camera);
-        mkDirsIfMissing(savedDir);
         final File[] savedFiles = savedDir.listFiles();
         if (!savedDir.isDirectory() || savedFiles == null) {
             throw new IllegalStateException(savedDir.getAbsolutePath() + " was expected to be a directory");
@@ -213,11 +221,15 @@ public class MovieFileManager {
     }
 
     File getRotatingDirectoryForCamera(final Camera camera) {
-        return new File(getRotatingDirectory(), camera.getName());
+        final File file = new File(getRotatingDirectory(), camera.getName());
+        mkDirsIfMissing(file);
+        return file;
     }
 
     File getSavedDirectoryForCamera(final Camera camera) {
-        return new File(getSavedDirectory(), camera.getName());
+        final File file = new File(getSavedDirectory(), camera.getName());
+        mkDirsIfMissing(file);
+        return file;
     }
 
     private String fileNameWithoutExtension(final File file) {
