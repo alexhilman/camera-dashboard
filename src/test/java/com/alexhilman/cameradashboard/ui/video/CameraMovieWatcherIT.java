@@ -2,7 +2,6 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -11,13 +10,11 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 
 @Ignore
 public class CameraMovieWatcherIT {
