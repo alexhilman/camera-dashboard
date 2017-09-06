@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import javax.inject.Named;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
@@ -34,7 +35,7 @@ public class MovieFileManager {
     private final File savedDirectory;
 
     @Inject
-    public MovieFileManager(final String storageDirectory) {
+    public MovieFileManager(@Named("cameradashboard.video.location") final String storageDirectory) {
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
         mkDirsIfMissing(this.storageDirectory);
