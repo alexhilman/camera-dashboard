@@ -15,6 +15,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -52,6 +53,8 @@ public class CameraMovieWatcher {
                                     downloadNewFiles();
                                 } catch (Exception e) {
                                     LOG.error("Could not fully iterate through new files", e);
+                                }finally {
+                                    LOG.info("Finished run");
                                 }
                             },
                             0,
@@ -94,6 +97,8 @@ public class CameraMovieWatcher {
 
             final Instant lastInstant = movieFileManager.lastMovieInstantFor(camera);
             dcs936Client.findNewMoviesSince(lastInstant)
+                        .stream()
+                        .sorted(Comparator.comparing(DcsFile::getCreatedInstant))
                         .forEach(file -> {
                             try (final InputStream inputStream = dcs936Client.open(file)) {
                                 movieFileManager.addMovieToRotatingPool(camera,
