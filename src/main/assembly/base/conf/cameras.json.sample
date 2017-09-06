@@ -3,6 +3,7 @@
     {
       "make": "dlink",
       "model": "DCS-936L",
+      "name": "DCS-936L",
       "networkAddress": "http://192.168.1.4/",
       "username": "admin",
       "password": "TotallyNotASmoker",

@@ -52,4 +52,9 @@ public class CameraMovieWatcherIT {
         assertThat(files, is(notNullValue()));
         assertThat(files, hasSize(greaterThanOrEqualTo(1)));
     }
+
+    @Test
+    public void shouldFindLastInstantForCamera() {
+//        cameraMovieWatcher.
+    }
 }

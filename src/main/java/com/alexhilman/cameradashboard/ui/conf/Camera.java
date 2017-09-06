@@ -10,6 +10,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 public class Camera {
     private final String make;
     private final String model;
+    private final String name;
     private final String networkAddress;
     private final String username;
     private final String password;
@@ -18,12 +19,14 @@ public class Camera {
     @JsonCreator
     public Camera(@JsonProperty(value = "make", required = true) final String make,
                   @JsonProperty(value = "model", required = true) final String model,
+                  @JsonProperty(value = "name", required = true) final String name,
                   @JsonProperty(value = "networkAddress", required = true) final String networkAddress,
                   @JsonProperty("username") final String username,
                   @JsonProperty("password") final String password,
                   @JsonProperty(value = "driver", required = true) final Driver driver) {
         this.make = checkNotNull(make, "make cannot be null");
         this.model = checkNotNull(model, "model cannot be null");
+        this.name = checkNotNull(name, "name cannot be null");
         this.networkAddress = checkNotNull(networkAddress, "networkAddress cannot be null");
         this.username = username;
         this.password = password;
@@ -36,6 +39,10 @@ public class Camera {
 
     public String getModel() {
         return model;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getNetworkAddress() {
@@ -63,6 +70,7 @@ public class Camera {
 
         if (!make.equals(camera.make)) return false;
         if (!model.equals(camera.model)) return false;
+        if (!name.equals(camera.name)) return false;
         if (!networkAddress.equals(camera.networkAddress)) return false;
         if (username != null ? !username.equals(camera.username) : camera.username != null) return false;
         if (password != null ? !password.equals(camera.password) : camera.password != null) return false;
@@ -73,6 +81,7 @@ public class Camera {
     public int hashCode() {
         int result = make.hashCode();
         result = 31 * result + model.hashCode();
+        result = 31 * result + name.hashCode();
         result = 31 * result + networkAddress.hashCode();
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (password != null ? password.hashCode() : 0);
@@ -85,6 +94,7 @@ public class Camera {
         return "Camera{" +
                 "make='" + make + '\'' +
                 ", model='" + model + '\'' +
+                ", name='" + name + '\'' +
                 ", networkAddress='" + networkAddress + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +

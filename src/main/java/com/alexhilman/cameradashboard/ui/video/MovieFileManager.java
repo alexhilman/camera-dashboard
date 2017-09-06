@@ -1,10 +1,17 @@
 package com.alexhilman.cameradashboard.ui.video;
 
+import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.sun.org.apache.xerces.internal.impl.dv.DTDDVFactory;
 
 import java.io.File;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -19,6 +26,8 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class MovieFileManager {
+    static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private final File storageDirectory;
     private final File rotatingDirectory;
     private final File savedDirectory;
@@ -49,17 +58,17 @@ public class MovieFileManager {
      * rootDir
      * |-- saved
      *     |-- cam1
-     *         |-- 2017-01-01 00:00:00.mov
+     *         |-- 2017-01-01 00:00:00.000.mov
      *         |-- ...
      *     |-- cam2
-     *         |-- 2017-01-01 00:01:00.mov
+     *         |-- 2017-01-01 00:01:00.000.mov
      *         |-- ...
      * |-- rotating
      *     |-- cam1
-     *         |-- 2017-10-01 00:00:00.mov
+     *         |-- 2017-10-01 00:00:00.000.mov
      *         |-- ...
      *     |-- cam2
-     *         |-- 2017-11-01 00:01:00.mov
+     *         |-- 2017-11-01 00:01:00.000.mov
      *         |-- ...
      * }
      * </pre>
@@ -176,5 +185,45 @@ public class MovieFileManager {
 
     public File getSavedDirectory() {
         return savedDirectory;
+    }
+
+    public Instant lastMovieInstantFor(final Camera camera) {
+        final File rotatingDir = getRotatingDirectoryForCamera(camera);
+        mkDirsIfMissing(rotatingDir);
+        final File[] rotatingFiles = rotatingDir.listFiles();
+        if (!rotatingDir.isDirectory() || rotatingFiles == null) {
+            throw new IllegalStateException(rotatingDir.getAbsolutePath() + " was expected to be a directory");
+        }
+
+        final File savedDir = getSavedDirectoryForCamera(camera);
+        mkDirsIfMissing(savedDir);
+        final File[] savedFiles = savedDir.listFiles();
+        if (!savedDir.isDirectory() || savedFiles == null) {
+            throw new IllegalStateException(savedDir.getAbsolutePath() + " was expected to be a directory");
+        }
+
+        final File[] allFiles = new File[savedFiles.length + rotatingFiles.length];
+        System.arraycopy(rotatingFiles, 0, allFiles, 0, rotatingFiles.length);
+        System.arraycopy(savedFiles, 0, allFiles, rotatingFiles.length, savedFiles.length);
+
+        final File latestFile = Arrays.stream(allFiles)
+                                      .reduce((f1, f2) -> f1.getName().compareTo(f2.getName()) > 0 ? f1 : f2)
+                                      .orElseThrow(() -> new RuntimeException("No files were found"));
+
+        return LocalDateTime.parse(fileNameWithoutExtension(latestFile), STORAGE_FILE_DATET_TIME_FORMAT)
+                            .atZone(ZoneId.systemDefault())
+                            .toInstant();
+    }
+
+    File getRotatingDirectoryForCamera(final Camera camera) {
+        return new File(getRotatingDirectory(), camera.getName());
+    }
+
+    File getSavedDirectoryForCamera(final Camera camera) {
+        return new File(getSavedDirectory(), camera.getName());
+    }
+
+    private String fileNameWithoutExtension(final File file) {
+        return file.getName().substring(0, file.getName().lastIndexOf('.'));
     }
 }
