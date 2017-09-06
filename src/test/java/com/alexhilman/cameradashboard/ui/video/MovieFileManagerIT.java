@@ -2,8 +2,6 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
-import com.alexhilman.dlink.dcs936.model.DcsFileType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -11,23 +9,16 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.STORAGE_FILE_DATET_TIME_FORMAT;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 public class MovieFileManagerIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -180,7 +171,7 @@ public class MovieFileManagerIT {
         final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
 
-        movieFileManager.saveMovie(rotatingMovies.get(0));
+        movieFileManager.moveRotatingPoolVideoToSavedPool(rotatingMovies.get(0));
         final List<File> savedMovies = movieFileManager.listSavedMovies();
         assertThat(savedMovies, hasSize(1));
         assertThat(savedMovies.get(0).getAbsolutePath(),

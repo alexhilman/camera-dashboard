@@ -140,7 +140,7 @@ public class MovieFileManager {
         }
     }
 
-    public void saveMovie(final File movieFile) {
+    void moveRotatingPoolVideoToSavedPool(final File movieFile) {
         checkNotNull(movieFile, "movieFile cannot be null");
         checkArgument(movieFile.exists(), "movieFile must exist");
         checkArgument(movieFile.getAbsolutePath().contains(getRotatingDirectory().getAbsolutePath()),
