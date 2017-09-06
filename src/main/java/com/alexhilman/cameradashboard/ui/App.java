@@ -5,6 +5,7 @@ import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.HandlerList;
 import org.eclipse.jetty.server.handler.ShutdownHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.slf4j.Logger;
@@ -49,7 +50,8 @@ public class App {
             };
             webAppContext.setDisplayName("Camera Dashboard");
             webAppContext.setContextPath("/");
-            webAppContext.addServlet(MyVaadinUI.MyVaadinServlet.class, "/*");
+            final ServletHolder servletHolder = webAppContext.addServlet(MyVaadinUI.MyVaadinServlet.class, "/*");
+            servletHolder.setInitOrder(0);
             webAppContext.setBaseResource(Resource.newClassPathResource("webapp"));
 
             final ShutdownHandler shutdownHandler = new ShutdownHandler("dccb2e0d-3f38-4ba1-9d05-4e810294aa18",
