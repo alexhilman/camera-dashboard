@@ -35,19 +35,6 @@ public class CameraMovieWatcher {
         return new CameraSelector(camera);
     }
 
-    public class CameraSelector {
-        private final Camera camera;
-
-        private CameraSelector(final Camera camera) {
-            this.camera = camera;
-        }
-
-        public List<DcsFile> listFilesNewerThan(final Instant instant) {
-            return driverFor(camera).findNewMoviesSince(instant);
-        }
-    }
-
-    //TODO this needs to be interfaced properly; usernames and passwords should be universal, etc
     private Dcs936Client driverFor(final Camera camera) {
         if (!camera.getDriver().getImplementation().equals(Dcs936Client.class.getName())) {
             throw new IllegalArgumentException("Camera driver not supported: " + camera.getDriver()
@@ -63,6 +50,19 @@ public class CameraMovieWatcher {
             );
         } catch (MalformedURLException e) {
             throw new RuntimeException("Malformed URL for camera: " + camera.getNetworkAddress(), e);
+        }
+    }
+
+    //TODO this needs to be interfaced properly; usernames and passwords should be universal, etc
+    public class CameraSelector {
+        private final Camera camera;
+
+        private CameraSelector(final Camera camera) {
+            this.camera = camera;
+        }
+
+        public List<DcsFile> listFilesNewerThan(final Instant instant) {
+            return driverFor(camera).findNewMoviesSince(instant);
         }
     }
 }
