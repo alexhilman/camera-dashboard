@@ -2,6 +2,8 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
+import com.alexhilman.dlink.dcs936.Dcs936Client;
+import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -19,6 +21,8 @@ import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.STORAGE_F
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class MovieFileManagerIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -146,8 +150,7 @@ public class MovieFileManagerIT {
         final Camera camera = readCameraConfig().getCameras().get(0);
         movieFileManager.addMovieToRotatingPool(camera,
                                                 new ByteArrayInputStream(new byte[0]),
-                                                "mp4",
-                                                fileInstant);
+                                                mockFile(fileInstant));
 
         final List<File> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
@@ -158,6 +161,14 @@ public class MovieFileManagerIT {
         assertThat(movies.get(0).exists(), is(true));
     }
 
+    private DcsFile mockFile(final Instant fileInstant) {
+        final DcsFile mock = mock(DcsFile.class);
+        when(mock.getCreatedInstant()).thenReturn(fileInstant);
+        when(mock.getFileName()).thenReturn(fileInstant.atZone(ZoneId.systemDefault())
+                                                       .format(Dcs936Client.FILE_DATE_FORMAT) + "D.mp4");
+        return mock;
+    }
+
     @Test
     public void shouldSaveMovieMovingItFromRotatingToSavedStorage() throws IOException {
         final Instant fileInstant = Instant.now();
@@ -165,8 +176,7 @@ public class MovieFileManagerIT {
         final Camera camera = readCameraConfig().getCameras().get(0);
         movieFileManager.addMovieToRotatingPool(camera,
                                                 new ByteArrayInputStream(new byte[0]),
-                                                "mp4",
-                                                fileInstant);
+                                                mockFile(fileInstant));
 
         final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));

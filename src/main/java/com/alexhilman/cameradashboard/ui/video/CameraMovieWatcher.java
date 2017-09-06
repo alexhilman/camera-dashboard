@@ -95,12 +95,10 @@ public class CameraMovieWatcher {
             final Instant lastInstant = movieFileManager.lastMovieInstantFor(camera);
             dcs936Client.findNewMoviesSince(lastInstant)
                         .forEach(file -> {
-                            final Instant fileInstant = dcs936Client.getFileInstant(file);
                             try (final InputStream inputStream = dcs936Client.open(file)) {
                                 movieFileManager.addMovieToRotatingPool(camera,
                                                                         inputStream,
-                                                                        extensionForFile(file),
-                                                                        fileInstant);
+                                                                        file);
                             } catch (IOException e) {
                                 throw new RuntimeException(
                                         "Could not get file " + file.getAbsoluteFileName() + " for camera " + camera.getName(),

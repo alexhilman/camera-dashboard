@@ -72,24 +72,21 @@ public class CameraMovieWatcherTest {
         final DcsFile expectedFile = new DcsFile("dummy",
                                                  "/abc/123/",
                                                  fileInstant
-                                                        .atZone(ZoneId.systemDefault())
-                                                        .format(Dcs936Client.FILE_DATE_FORMAT),
+                                                         .atZone(ZoneId.systemDefault())
+                                                         .format(Dcs936Client.FILE_DATE_FORMAT),
                                                  DcsFileType.File);
+        expectedFile.setCreatedInstant(fileInstant);
 
         when(driver.findNewMoviesSince(any())).thenReturn(
                 Lists.newArrayList(expectedFile)
         );
-
-        when(driver.getFileInstant(expectedFile))
-                .thenReturn(fileInstant);
 
         cameraMovieWatcher.downloadNewFiles();
 
         verify(movieFileManager, times(1))
                 .addMovieToRotatingPool(eq(cameraConfiguration.getCameras().get(0)),
                                         any(InputStream.class),
-                                        eq("mp4"),
-                                        eq(fileInstant));
+                                        eq(expectedFile));
 
     }
 }

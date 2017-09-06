@@ -1,6 +1,7 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
+import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -112,18 +113,17 @@ public class MovieFileManager {
 
     public void addMovieToRotatingPool(final Camera camera,
                                        final InputStream inputStream,
-                                       final String fileExtension,
-                                       final Instant fileInstant) {
+                                       final DcsFile file) {
         checkNotNull(camera, "camera cannot be null");
         checkNotNull(inputStream, "inputStream cannot be null");
-        checkNotNull(fileExtension, "fileExtension cannot be null");
-        checkNotNull(fileInstant, "fileInstant cannot be null");
+        checkNotNull(file, "file cannot be null");
 
         final File cameraDir = getRotatingDirectoryForCamera(camera);
 
         final File newFile = new File(cameraDir,
-                                      fileInstant.atZone(ZoneId.systemDefault())
-                                                 .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + fileExtension);
+                                      file.getCreatedInstant()
+                                          .atZone(ZoneId.systemDefault())
+                                          .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(file.getFileName()));
 
         if (newFile.exists()) {
             throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
@@ -139,6 +139,10 @@ public class MovieFileManager {
         } catch (Exception e) {
             throw new RuntimeException("Could not save file", e);
         }
+    }
+
+    private String extensionForFileName(final String fileName) {
+        return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
 
     void moveRotatingPoolVideoToSavedPool(final File movieFile) {
