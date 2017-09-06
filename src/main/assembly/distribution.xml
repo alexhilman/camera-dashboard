@@ -15,6 +15,7 @@
             </includes>
             <excludes>
                 <exclude>**/*.properties</exclude>
+                <exclude>**/*.json</exclude>
             </excludes>
             <outputDirectory>./</outputDirectory>
         </fileSet>
