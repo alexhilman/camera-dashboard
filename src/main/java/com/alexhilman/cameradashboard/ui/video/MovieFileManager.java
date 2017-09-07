@@ -12,6 +12,7 @@ import org.apache.logging.log4j.Logger;
 import javax.inject.Named;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -27,10 +28,9 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class MovieFileManager {
-    private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
-
     static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
+    private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
     private final File storageDirectory;
     private final File rotatingDirectory;
     private final File savedDirectory;
@@ -120,7 +120,6 @@ public class MovieFileManager {
 
         final File cameraDir = getRotatingDirectoryForCamera(camera);
 
-        // TODO copy to /tmp, then move to rotating pool
         final File newFile = new File(cameraDir,
                                       file.getCreatedInstant()
                                           .atZone(ZoneId.systemDefault())
@@ -130,15 +129,27 @@ public class MovieFileManager {
             throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
         }
 
+        final File tmpFile;
+        try {
+            tmpFile = File.createTempFile("camera-dashboard-", ".tmp");
+            tmpFile.createNewFile();
+        } catch (IOException e) {
+            throw new RuntimeException("Could not create temp file", e);
+        }
+
         LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
                  newFile.getName(),
                  camera.getName(),
                  camera.getNetworkAddress());
 
-        try (final FileOutputStream outputStream = new FileOutputStream(newFile)) {
+        try (final FileOutputStream outputStream = new FileOutputStream(tmpFile)) {
             IOStreams.redirect(inputStream, outputStream);
         } catch (Exception e) {
             throw new RuntimeException("Could not save file", e);
+        }
+
+        if (!tmpFile.renameTo(newFile)) {
+            throw new RuntimeException("Could not move file to rotating pool");
         }
     }
 

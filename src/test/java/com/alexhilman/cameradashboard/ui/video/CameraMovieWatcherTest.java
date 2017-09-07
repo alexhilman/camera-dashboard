@@ -8,6 +8,7 @@ import com.alexhilman.dlink.dcs936.Dcs936Client;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.alexhilman.dlink.dcs936.model.DcsFileType;
 import com.google.common.collect.Lists;
+import io.reactivex.Flowable;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -55,6 +56,7 @@ public class CameraMovieWatcherTest {
     @Test
     public void shouldRequestNewMoviesSinceEpochForCameraWithNoFiles() {
         when(movieFileManager.lastMovieInstantFor(any())).thenReturn(Instant.EPOCH);
+        when(driver.findNewMoviesSince(any())).thenReturn(Flowable.empty());
 
         cameraMovieWatcher.downloadNewFiles();
 
@@ -75,10 +77,9 @@ public class CameraMovieWatcherTest {
                                                          .atZone(ZoneId.systemDefault())
                                                          .format(Dcs936Client.FILE_DATE_FORMAT),
                                                  DcsFileType.File);
-        expectedFile.setCreatedInstant(fileInstant);
 
         when(driver.findNewMoviesSince(any())).thenReturn(
-                Lists.newArrayList(expectedFile)
+                Flowable.just(expectedFile)
         );
 
         cameraMovieWatcher.downloadNewFiles();
