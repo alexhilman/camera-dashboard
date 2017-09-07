@@ -7,6 +7,7 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -121,6 +122,7 @@ public class MovieFileManager {
 
         Flowable.fromIterable(files)
                 .parallel()
+                .runOn(Schedulers.io())
                 .map(dcsFile -> {
                     final File tmpFile =
                             new File(tmpDir,
