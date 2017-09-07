@@ -1,12 +1,12 @@
 package com.alexhilman.cameradashboard.ui.video;
 
+import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.cameradashboard.ui.conf.Driver;
 import com.alexhilman.cameradashboard.ui.conf.Type;
 import com.alexhilman.dlink.dcs936.Dcs936Client;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
-import com.alexhilman.dlink.dcs936.model.DcsFileType;
 import com.google.common.collect.Lists;
 import io.reactivex.Flowable;
 import org.junit.Before;
@@ -14,9 +14,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 
 import static org.mockito.Matchers.any;
@@ -70,13 +68,7 @@ public class CameraMovieWatcherTest {
         when(driver.open(any()))
                 .thenReturn(new ByteArrayInputStream(new byte[0]));
 
-        final Instant fileInstant = Instant.now();
-        final DcsFile expectedFile = new DcsFile("dummy",
-                                                 "/abc/123/",
-                                                 fileInstant
-                                                         .atZone(ZoneId.systemDefault())
-                                                         .format(Dcs936Client.FILE_DATE_FORMAT),
-                                                 DcsFileType.File);
+        final DcsFile expectedFile = Fixtures.randomDcsFile();
 
         when(driver.findNewMoviesSince(any())).thenReturn(
                 Flowable.just(expectedFile)
@@ -85,9 +77,8 @@ public class CameraMovieWatcherTest {
         cameraMovieWatcher.downloadNewFiles();
 
         verify(movieFileManager, times(1))
-                .addMovieToRotatingPool(eq(cameraConfiguration.getCameras().get(0)),
-                                        any(InputStream.class),
-                                        eq(expectedFile));
+                .addMoviesToRotatingPool(eq(cameraConfiguration.getCameras().get(0)),
+                                         eq(Lists.newArrayList(expectedFile)));
 
     }
 }

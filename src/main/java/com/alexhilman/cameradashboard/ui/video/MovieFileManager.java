@@ -6,13 +6,13 @@ import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import io.reactivex.Flowable;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import javax.inject.Named;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -111,46 +111,58 @@ public class MovieFileManager {
                      .orElse(Collections.emptyList());
     }
 
-    public void addMovieToRotatingPool(final Camera camera,
-                                       final InputStream inputStream,
-                                       final DcsFile file) {
+    public void addMoviesToRotatingPool(final Camera camera,
+                                        final List<DcsFile> files) {
         checkNotNull(camera, "camera cannot be null");
-        checkNotNull(inputStream, "inputStream cannot be null");
-        checkNotNull(file, "file cannot be null");
+        checkNotNull(files, "files cannot be null");
 
-        final File cameraDir = getRotatingDirectoryForCamera(camera);
+        final File rotatingPool = getRotatingDirectoryForCamera(camera);
+        final File tmpDir = getTempFolder();
 
-        final File newFile = new File(cameraDir,
-                                      file.getCreatedInstant()
-                                          .atZone(ZoneId.systemDefault())
-                                          .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(file.getFileName()));
+        Flowable.fromIterable(files)
+                .parallel()
+                .map(dcsFile -> {
+                    final File tmpFile =
+                            new File(tmpDir,
+                                     dcsFile.getCreatedInstant()
+                                            .atZone(ZoneId.systemDefault())
+                                            .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(dcsFile.getFileName()));
 
-        if (newFile.exists()) {
-            throw new IllegalArgumentException("Movie file already exists in the camera storage directory: " + newFile.getAbsolutePath());
-        }
+                    if (tmpFile.exists()) {
+                        if (!tmpFile.delete()) {
+                            throw new IllegalArgumentException("Could not delete old tmp file: " + tmpFile.getAbsolutePath());
+                        }
+                    }
 
-        final File tmpFile;
-        try {
-            tmpFile = File.createTempFile("camera-dashboard-", ".tmp");
-            tmpFile.createNewFile();
-        } catch (IOException e) {
-            throw new RuntimeException("Could not create temp file", e);
-        }
+                    if (!tmpFile.createNewFile()) {
+                        throw new RuntimeException("Could not create tmp file: " + tmpFile.getAbsolutePath());
+                    }
 
-        LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
-                 newFile.getName(),
-                 camera.getName(),
-                 camera.getNetworkAddress());
+                    LOG.info("Downloading {} to temporary location", dcsFile.getAbsoluteFileName());
 
-        try (final FileOutputStream outputStream = new FileOutputStream(tmpFile)) {
-            IOStreams.redirect(inputStream, outputStream);
-        } catch (Exception e) {
-            throw new RuntimeException("Could not save file", e);
-        }
+                    try (final FileOutputStream outputStream = new FileOutputStream(tmpFile);
+                         final InputStream inputStream = dcsFile.open()) {
+                        IOStreams.redirect(inputStream, outputStream);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Could not save file: " + dcsFile.getAbsoluteFileName(), e);
+                    }
 
-        if (!tmpFile.renameTo(newFile)) {
-            throw new RuntimeException("Could not move file to rotating pool");
-        }
+                    return tmpFile;
+                })
+                .sorted(Comparator.comparing(File::getName))
+                .toList()
+                .blockingGet()
+                .forEach(tmpFile -> {
+                    final File newFile = new File(rotatingPool, tmpFile.getName());
+                    LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
+                             tmpFile.getName(),
+                             camera.getName(),
+                             camera.getNetworkAddress());
+
+                    if (!tmpFile.renameTo(newFile)) {
+                        throw new RuntimeException("Could not move file to rotating pool");
+                    }
+                });
     }
 
     private String extensionForFileName(final String fileName) {
@@ -259,5 +271,9 @@ public class MovieFileManager {
 
     private String fileNameWithoutExtension(final File file) {
         return file.getName().substring(0, file.getName().lastIndexOf('.'));
+    }
+
+    static File getTempFolder() {
+        return new File(System.getProperty("java.io.tmpdir"));
     }
 }

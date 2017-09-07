@@ -1,15 +1,15 @@
 package com.alexhilman.cameradashboard.ui.video;
 
+import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.Dcs936Client;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
@@ -21,8 +21,6 @@ import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.STORAGE_F
 import static java.time.temporal.ChronoUnit.DAYS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class MovieFileManagerIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -145,38 +143,27 @@ public class MovieFileManagerIT {
 
     @Test
     public void shouldAddMovie() throws IOException {
-        final Instant fileInstant = Instant.now();
-
         final Camera camera = readCameraConfig().getCameras().get(0);
-        movieFileManager.addMovieToRotatingPool(camera,
-                                                new ByteArrayInputStream(new byte[0]),
-                                                mockFile(fileInstant));
+        final DcsFile dcsFile = Fixtures.randomDcsFile();
+        movieFileManager.addMoviesToRotatingPool(camera,
+                                                 Lists.newArrayList(dcsFile));
 
         final List<File> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
         assertThat(movies.get(0).getAbsolutePath(),
                    endsWith("/rotating/" + camera.getName() + "/" +
-                                    fileInstant.atZone(ZoneId.systemDefault())
-                                               .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
+                                    dcsFile.getCreatedInstant()
+                                           .atZone(ZoneId.systemDefault())
+                                           .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
         assertThat(movies.get(0).exists(), is(true));
-    }
-
-    private DcsFile mockFile(final Instant fileInstant) {
-        final DcsFile mock = mock(DcsFile.class);
-        when(mock.getCreatedInstant()).thenReturn(fileInstant);
-        when(mock.getFileName()).thenReturn(fileInstant.atZone(ZoneId.systemDefault())
-                                                       .format(Dcs936Client.FILE_DATE_FORMAT) + "D.mp4");
-        return mock;
     }
 
     @Test
     public void shouldSaveMovieMovingItFromRotatingToSavedStorage() throws IOException {
-        final Instant fileInstant = Instant.now();
-
         final Camera camera = readCameraConfig().getCameras().get(0);
-        movieFileManager.addMovieToRotatingPool(camera,
-                                                new ByteArrayInputStream(new byte[0]),
-                                                mockFile(fileInstant));
+        final DcsFile dcsFile = Fixtures.randomDcsFile();
+        movieFileManager.addMoviesToRotatingPool(camera,
+                                                 Lists.newArrayList(dcsFile));
 
         final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
@@ -186,8 +173,9 @@ public class MovieFileManagerIT {
         assertThat(savedMovies, hasSize(1));
         assertThat(savedMovies.get(0).getAbsolutePath(),
                    endsWith("/saved/" + camera.getName() + "/" +
-                                    fileInstant.atZone(ZoneId.systemDefault())
-                                               .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
+                                    dcsFile.getCreatedInstant()
+                                           .atZone(ZoneId.systemDefault())
+                                           .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
     }
 
     @Test

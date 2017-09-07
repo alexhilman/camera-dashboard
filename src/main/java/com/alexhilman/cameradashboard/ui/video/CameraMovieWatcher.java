@@ -10,8 +10,6 @@ import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Instant;
@@ -93,20 +91,11 @@ public class CameraMovieWatcher {
             final Dcs936Client dcs936Client = driverFor(camera);
 
             final Instant lastInstant = movieFileManager.lastMovieInstantFor(camera);
-            dcs936Client.findNewMoviesSince(lastInstant)
-                        .toList()
-                        .blockingGet()
-                        .forEach(file -> {
-                            try (final InputStream inputStream = dcs936Client.open(file)) {
-                                movieFileManager.addMovieToRotatingPool(camera,
-                                                                        inputStream,
-                                                                        file);
-                            } catch (IOException e) {
-                                throw new RuntimeException(
-                                        "Could not get file " + file.getAbsoluteFileName() + " for camera " + camera.getName(),
-                                        e);
-                            }
-                        });
+            movieFileManager.addMoviesToRotatingPool(
+                    camera,
+                    dcs936Client.findNewMoviesSince(lastInstant)
+                                .toList()
+                                .blockingGet());
         });
     }
 
