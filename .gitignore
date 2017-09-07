@@ -6,3 +6,5 @@ target/
 src/main/java/com/alexhilman/cameradashboard/ui/App.gwt.xml
 src/main/assembly/base/conf/*.properties
 src/main/assembly/base/conf/*.json
+
+src/main/resources/webapp/VAADIN/themes/**/styles.css
