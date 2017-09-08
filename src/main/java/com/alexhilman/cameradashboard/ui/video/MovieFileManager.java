@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -28,7 +29,7 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class MovieFileManager {
-    static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
+    private static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
     private final File storageDirectory;
@@ -128,10 +129,8 @@ public class MovieFileManager {
                     .map(dcsFile -> {
                         final File tmpFile =
                                 new File(tmpDir,
-                                         dcsFile.getCreatedInstant()
-                                                .atZone(ZoneId.systemDefault())
-                                                .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(
-                                                 dcsFile.getFileName()));
+                                         movieFileNameFor(dcsFile.getCreatedInstant(),
+                                                          extensionForFileName(dcsFile.getFileName())));
 
                         if (tmpFile.exists()) {
                             if (!tmpFile.delete()) {
@@ -169,6 +168,14 @@ public class MovieFileManager {
                         }
                     });
         }
+    }
+
+    static String movieFileNameFor(final Instant fileInstant, final String fileExtension) {
+        checkNotNull(fileInstant, "fileInstant cannot be null");
+        checkNotNull(fileExtension, "fileExtension cannot be null");
+        return fileInstant
+                .atZone(ZoneId.systemDefault())
+                .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + fileExtension;
     }
 
     private <T> List<T> takeFromQueue(final int smallBatchSize, final Queue<T> queue) {
@@ -309,5 +316,23 @@ public class MovieFileManager {
 
     public long getTotalSpace() {
         return storageDirectory.getTotalSpace();
+    }
+
+    public List<File> getMoviesSince(final Instant instant) {
+        final String dateString = instant.atZone(ZoneId.systemDefault()).format(STORAGE_FILE_DATET_TIME_FORMAT);
+        return Stream.of(rotatingDirectory, savedDirectory)
+                     .map(File::listFiles)
+                     .flatMap(Arrays::stream)
+                     .map(rotatingCameraDirs -> {
+                         return Arrays.stream(rotatingCameraDirs.listFiles())
+                                      .filter(file -> {
+                                          return file.getName().endsWith(".mp4") &&
+                                                  dateString.compareTo(file.getName()
+                                                                           .substring(0, dateString.length())) <= 0;
+                                      })
+                                      .collect(toList());
+                     })
+                     .flatMap(List::stream)
+                     .collect(toList());
     }
 }

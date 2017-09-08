@@ -13,12 +13,12 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.STORAGE_FILE_DATET_TIME_FORMAT;
+import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.movieFileNameFor;
 import static java.time.temporal.ChronoUnit.DAYS;
+import static java.time.temporal.ChronoUnit.HOURS;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
@@ -28,7 +28,7 @@ public class MovieFileManagerIT {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager("/tmp/.cameradashboard");
+        movieFileManager = new MovieFileManager("/tmp/.camera-dashboard");
     }
 
     @After
@@ -152,9 +152,7 @@ public class MovieFileManagerIT {
         assertThat(movies, hasSize(1));
         assertThat(movies.get(0).getAbsolutePath(),
                    endsWith("/rotating/" + camera.getName() + "/" +
-                                    dcsFile.getCreatedInstant()
-                                           .atZone(ZoneId.systemDefault())
-                                           .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
+                                    movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
         assertThat(movies.get(0).exists(), is(true));
     }
 
@@ -173,9 +171,7 @@ public class MovieFileManagerIT {
         assertThat(savedMovies, hasSize(1));
         assertThat(savedMovies.get(0).getAbsolutePath(),
                    endsWith("/saved/" + camera.getName() + "/" +
-                                    dcsFile.getCreatedInstant()
-                                           .atZone(ZoneId.systemDefault())
-                                           .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4"));
+                                    movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
     }
 
     @Test
@@ -190,16 +186,14 @@ public class MovieFileManagerIT {
         Instant expectedInstant = Instant.now().minus(365, DAYS);
         new File(rotatingStorageDirectory, "2015-01-01 00:00:00.000.mp4").createNewFile();
         new File(rotatingStorageDirectory,
-                 expectedInstant.atZone(ZoneId.systemDefault())
-                                .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4").createNewFile();
+                 movieFileNameFor(expectedInstant, "mp4")).createNewFile();
 
         final Instant lastMovieInstant = movieFileManager.lastMovieInstantFor(camera);
         assertThat(lastMovieInstant, is(expectedInstant));
 
         expectedInstant = Instant.now().minus(10, DAYS);
         new File(savedStorageDirectory,
-                 expectedInstant.atZone(ZoneId.systemDefault())
-                                .format(STORAGE_FILE_DATET_TIME_FORMAT) + ".mp4").createNewFile();
+                 movieFileNameFor(expectedInstant, "mp4")).createNewFile();
 
         final Instant lastSavedMovieInstant = movieFileManager.lastMovieInstantFor(camera);
         assertThat(lastSavedMovieInstant, is(expectedInstant));
@@ -212,6 +206,43 @@ public class MovieFileManagerIT {
 
         final Instant instant = movieFileManager.lastMovieInstantFor(camera);
         assertThat(instant, is(Instant.EPOCH));
+    }
+
+    @Test
+    public void shouldListMoviesSinceInstant() throws IOException {
+        final List<File> expectedFiles = Lists.newArrayList();
+
+        final CameraConfiguration cameraConfiguration = readCameraConfig();
+        final File unknownStorage = new File(movieFileManager.getRotatingDirectory(), "unknowncam1");
+        unknownStorage.mkdir();
+
+        final Instant threeHoursAgo = Instant.now().minus(3, HOURS);
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), is(empty()));
+
+        new File(unknownStorage, movieFileNameFor(Instant.EPOCH, "mp4")).createNewFile();
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), is(empty()));
+
+        final File rotatingDirectoryForCamera =
+                movieFileManager.getRotatingDirectoryForCamera(cameraConfiguration.getCameras().get(0));
+        File file = new File(rotatingDirectoryForCamera, movieFileNameFor(Instant.now(), "mp4"));
+        file.createNewFile();
+        expectedFiles.add(file);
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), contains(file));
+
+        new File(unknownStorage, movieFileNameFor(Instant.now(), "jpg")).createNewFile();
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), contains(file));
+
+        file = new File(unknownStorage, movieFileNameFor(Instant.now(), "mp4"));
+        file.createNewFile();
+        expectedFiles.add(file);
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), containsInAnyOrder(expectedFiles.toArray()));
+
+        final File savedDirectory =
+                movieFileManager.getSavedDirectoryForCamera(cameraConfiguration.getCameras().get(0));
+        file = new File(savedDirectory, movieFileNameFor(threeHoursAgo, "mp4"));
+        file.createNewFile();
+        expectedFiles.add(file);
+        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), containsInAnyOrder(expectedFiles.toArray()));
     }
 
     private CameraConfiguration readCameraConfig() {
