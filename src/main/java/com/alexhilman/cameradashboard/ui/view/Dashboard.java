@@ -3,12 +3,11 @@ package com.alexhilman.cameradashboard.ui.view;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Sizeable;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.ProgressBar;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -20,6 +19,8 @@ public class Dashboard implements View {
 
     private final MovieFileManager movieFileManager;
     private VerticalLayout rootLayout;
+    private ProgressBar progressBar;
+    private Panel todayMovies;
 
     @Inject
     public Dashboard(final MovieFileManager movieFileManager) {
@@ -29,26 +30,34 @@ public class Dashboard implements View {
     @Override
     public Component getViewComponent() {
         rootLayout = new VerticalLayout();
-        rootLayout.addComponent(buildFileSystemThermometer());
+
+        progressBar = new ProgressBar(0f);
+        progressBar.setWidth(100, Sizeable.Unit.PERCENTAGE);
+        rootLayout.addComponent(progressBar);
+
+        todayMovies = new Panel("Today's Movies");
+        todayMovies.setIcon(VaadinIcons.FILM);
+        todayMovies.setWidth(100, Sizeable.Unit.PERCENTAGE);
+        rootLayout.addComponent(todayMovies);
 
         return rootLayout;
     }
 
-    private Component buildFileSystemThermometer() {
+    private Component buildMoviesComponent() {
+        return new Label("Placeholder");
+    }
+
+    @Override
+    public void enter(final ViewChangeListener.ViewChangeEvent event) {
         final long usableSpace = movieFileManager.getUsableSpace();
         final long totalSpace = movieFileManager.getTotalSpace();
         final long usedSpace = totalSpace - usableSpace;
 
         final float progress = (float) ((double) usedSpace / (double) totalSpace);
-        final ProgressBar progressBar = new ProgressBar(progress);
+        progressBar.setValue(progress);
         progressBar.setCaption("Free space: " + humanReadableByteCount(usableSpace));
-        progressBar.setWidth(100, Sizeable.Unit.PERCENTAGE);
 
-        return progressBar;
-    }
-
-    @Override
-    public void enter(final ViewChangeListener.ViewChangeEvent event) {
+        todayMovies.setContent(buildMoviesComponent());
     }
 
     public static String humanReadableByteCount(long bytes) {
