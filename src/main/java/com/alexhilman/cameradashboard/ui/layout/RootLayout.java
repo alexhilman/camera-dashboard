@@ -5,10 +5,7 @@ import com.google.inject.Inject;
 import com.vaadin.guice.annotation.UIScope;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.shared.ui.MarginInfo;
-import com.vaadin.ui.Button;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.HorizontalLayout;
-import com.vaadin.ui.VerticalLayout;
+import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 
 /**
@@ -21,16 +18,17 @@ public class RootLayout extends HorizontalLayout {
         setSizeFull();
         setMargin(true);
         setSpacing(true);
-        addComponent(buildQuickLinksComponent());
-        addComponents(viewContainer);
-        setExpandRatio(viewContainer, 1);
+        final Component actions = buildQuickLinksComponent();
+        addComponent(actions);
+        setComponentAlignment(actions, Alignment.MIDDLE_CENTER);
+        addComponentsAndExpand(viewContainer);
     }
 
     private Component buildQuickLinksComponent() {
         final VerticalLayout actions = new VerticalLayout();
-        actions.addStyleNames("root-actions");
         actions.setMargin(new MarginInfo(false, true, false, false));
-        actions.setWidth(10, Unit.EM);
+        actions.setWidthUndefined();
+        actions.addStyleNames("root-actions");
         actions.setSpacing(true);
 
         final Button homeButton = new Button(VaadinIcons.HOME);
