@@ -7,10 +7,10 @@ import com.vaadin.ui.Label;
 
 /**
  */
-@GuiceView("secondary")
-public class Secondary implements View {
+@GuiceView("movies")
+public class Movies implements View {
     @Override
     public Component getViewComponent() {
-        return new Label("Secondary");
+        return new Label("Movies");
     }
 }
