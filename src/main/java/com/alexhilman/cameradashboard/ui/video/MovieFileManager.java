@@ -7,7 +7,6 @@ import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.reactivex.Flowable;
-import io.reactivex.schedulers.Schedulers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -118,53 +117,70 @@ public class MovieFileManager {
         checkNotNull(files, "files cannot be null");
 
         final File rotatingPool = getRotatingDirectoryForCamera(camera);
-        final File tmpDir = getTempFolder();
+        final File tmpDir = getTempFolderForCamera(camera);
 
-        Flowable.fromIterable(files)
-                .parallel()
-                .runOn(Schedulers.io())
-                .map(dcsFile -> {
-                    final File tmpFile =
-                            new File(tmpDir,
-                                     dcsFile.getCreatedInstant()
-                                            .atZone(ZoneId.systemDefault())
-                                            .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(dcsFile.getFileName()));
+        final int smallBatchSize = Runtime.getRuntime().availableProcessors();
 
-                    if (tmpFile.exists()) {
-                        if (!tmpFile.delete()) {
-                            throw new IllegalArgumentException("Could not delete old tmp file: " + tmpFile.getAbsolutePath());
+        final Queue<DcsFile> remaining = Lists.newLinkedList(files);
+        while (!remaining.isEmpty()) {
+            Flowable.fromIterable(takeFromQueue(smallBatchSize, remaining))
+                    .parallel()
+                    .map(dcsFile -> {
+                        final File tmpFile =
+                                new File(tmpDir,
+                                         dcsFile.getCreatedInstant()
+                                                .atZone(ZoneId.systemDefault())
+                                                .format(STORAGE_FILE_DATET_TIME_FORMAT) + "." + extensionForFileName(
+                                                 dcsFile.getFileName()));
+
+                        if (tmpFile.exists()) {
+                            if (!tmpFile.delete()) {
+                                throw new IllegalArgumentException("Could not delete old tmp file: " + tmpFile.getAbsolutePath());
+                            }
                         }
-                    }
 
-                    if (!tmpFile.createNewFile()) {
-                        throw new RuntimeException("Could not create tmp file: " + tmpFile.getAbsolutePath());
-                    }
+                        if (!tmpFile.createNewFile()) {
+                            throw new RuntimeException("Could not create tmp file: " + tmpFile.getAbsolutePath());
+                        }
 
-                    LOG.info("Downloading {} to temporary location", dcsFile.getAbsoluteFileName());
+                        LOG.info("Downloading {} to temporary location", dcsFile.getAbsoluteFileName());
 
-                    try (final FileOutputStream outputStream = new FileOutputStream(tmpFile);
-                         final InputStream inputStream = dcsFile.open()) {
-                        IOStreams.redirect(inputStream, outputStream);
-                    } catch (Exception e) {
-                        throw new RuntimeException("Could not save file: " + dcsFile.getAbsoluteFileName(), e);
-                    }
+                        try (final FileOutputStream outputStream = new FileOutputStream(tmpFile);
+                             final InputStream inputStream = dcsFile.open()) {
+                            IOStreams.redirect(inputStream, outputStream);
+                        } catch (Exception e) {
+                            throw new RuntimeException("Could not save file: " + dcsFile.getAbsoluteFileName(), e);
+                        }
 
-                    return tmpFile;
-                })
-                .sorted(Comparator.comparing(File::getName))
-                .toList()
-                .blockingGet()
-                .forEach(tmpFile -> {
-                    final File newFile = new File(rotatingPool, tmpFile.getName());
-                    LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
-                             tmpFile.getName(),
-                             camera.getName(),
-                             camera.getNetworkAddress());
+                        return tmpFile;
+                    })
+                    .sorted(Comparator.comparing(File::getName))
+                    .toList()
+                    .blockingGet()
+                    .forEach(tmpFile -> {
+                        final File newFile = new File(rotatingPool, tmpFile.getName());
+                        LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
+                                 tmpFile.getName(),
+                                 camera.getName(),
+                                 camera.getNetworkAddress());
 
-                    if (!tmpFile.renameTo(newFile)) {
-                        throw new RuntimeException("Could not move file to rotating pool");
-                    }
-                });
+                        if (!tmpFile.renameTo(newFile)) {
+                            throw new RuntimeException("Could not move file to rotating pool");
+                        }
+                    });
+        }
+    }
+
+    private <T> List<T> takeFromQueue(final int smallBatchSize, final Queue<T> queue) {
+        final List<T> list = Lists.newArrayListWithCapacity(smallBatchSize);
+
+        for (int i = 0; i < smallBatchSize; i++) {
+            final T poll = queue.poll();
+            if (poll == null) break;
+            list.add(poll);
+        }
+
+        return list;
     }
 
     private String extensionForFileName(final String fileName) {
@@ -275,7 +291,15 @@ public class MovieFileManager {
         return file.getName().substring(0, file.getName().lastIndexOf('.'));
     }
 
-    static File getTempFolder() {
-        return new File(System.getProperty("java.io.tmpdir"));
+    File getTempFolderForCamera(final Camera camera) {
+        final File file = new File(getDownloadingDirectory(), camera.getName());
+        mkDirsIfMissing(file);
+        return file;
+    }
+
+    private File getDownloadingDirectory() {
+        final File file = new File(storageDirectory, ".downloading");
+        mkDirsIfMissing(file);
+        return file;
     }
 }

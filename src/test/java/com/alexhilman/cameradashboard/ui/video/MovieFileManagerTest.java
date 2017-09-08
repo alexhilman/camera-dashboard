@@ -59,10 +59,10 @@ public class MovieFileManagerTest {
 
     @Test
     public void shouldGetTempFolder() {
-        final File tempFolder = MovieFileManager.getTempFolder();
+        final File tempFolder = movieFileManager.getTempFolderForCamera(camera);
 
         assertThat(tempFolder, is(notNullValue()));
-        assertThat(tempFolder.getAbsolutePath(), is("/tmp"));
+        assertThat(tempFolder.getAbsolutePath(), endsWith(".downloading/" + camera.getName()));
     }
 
     @Test
