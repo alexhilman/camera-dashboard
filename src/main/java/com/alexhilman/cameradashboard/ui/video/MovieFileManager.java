@@ -302,4 +302,12 @@ public class MovieFileManager {
         mkDirsIfMissing(file);
         return file;
     }
+
+    public long getUsableSpace() {
+        return storageDirectory.getUsableSpace();
+    }
+
+    public long getTotalSpace() {
+        return storageDirectory.getTotalSpace();
+    }
 }
