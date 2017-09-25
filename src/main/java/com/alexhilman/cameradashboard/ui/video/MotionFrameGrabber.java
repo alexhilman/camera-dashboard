@@ -13,7 +13,7 @@ import java.io.File;
 /**
  */
 public class MotionFrameGrabber {
-    public byte[] grabJpgFrame(final File movieFile, final int frameTimestampMillis) throws Exception{
+    public byte[] grabJpgFrame(final File movieFile, final int frameTimestampMillis) throws Exception {
         Loader.load(opencv_objdetect.class);
 
         try (final FFmpegFrameGrabber frameGrabber = FFmpegFrameGrabber.createDefault(movieFile)) {

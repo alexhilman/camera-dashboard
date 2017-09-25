@@ -13,6 +13,7 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class MovieFileManagerIT {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager("/tmp/.camera-dashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.camera-dashboard");
     }
 
     @After
@@ -75,11 +76,14 @@ public class MovieFileManagerIT {
         final File cam2Movie = new File(cam2, "2017-01-01 00:00:00.000.mov");
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
+        final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
 
-        final List<File> files = movieFileManager.listRotatingMovies();
+        final List<Movie> files = movieFileManager.listRotatingMovies();
 
         assertThat(files, is(notNullValue()));
-        assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
+        files.forEach(f -> {
+            assertThat(expectedFiles, hasItem(f.getMovieFile()));
+        });
     }
 
     @Test
@@ -98,11 +102,14 @@ public class MovieFileManagerIT {
         final File cam2Movie = new File(cam2, "2017-01-01 00:00:00.000.mov");
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
+        final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
 
-        final List<File> files = movieFileManager.listSavedMovies();
+        final List<Movie> files = movieFileManager.listSavedMovies();
 
         assertThat(files, is(notNullValue()));
-        assertThat(files, containsInAnyOrder(cam1Movie, cam2Movie));
+        files.forEach(f -> {
+            assertThat(expectedFiles, hasItem(f.getMovieFile()));
+        });
     }
 
     @Test
@@ -134,11 +141,14 @@ public class MovieFileManagerIT {
         final File cam2Movie2 = new File(cam2Rotating, "2017-01-01 00:00:00.000.mov");
         cam1Movie2.createNewFile();
         cam2Movie2.createNewFile();
+        final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie1, cam2Movie1, cam1Movie2, cam2Movie2);
 
-        final List<File> files = movieFileManager.listAllMovies();
+        final List<Movie> files = movieFileManager.listAllMovies();
 
         assertThat(files, is(notNullValue()));
-        assertThat(files, containsInAnyOrder(cam1Movie2, cam2Movie2, cam1Movie1, cam2Movie1));
+        files.forEach(f -> {
+            assertThat(expectedFiles, hasItem(f.getMovieFile()));
+        });
     }
 
     @Test
@@ -148,12 +158,12 @@ public class MovieFileManagerIT {
         movieFileManager.addMoviesToRotatingPool(camera,
                                                  Lists.newArrayList(dcsFile));
 
-        final List<File> movies = movieFileManager.listAllMovies();
+        final List<Movie> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
-        assertThat(movies.get(0).getAbsolutePath(),
+        assertThat(movies.get(0).getMovieFile().getAbsolutePath(),
                    endsWith("/rotating/" + camera.getName() + "/" +
                                     movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
-        assertThat(movies.get(0).exists(), is(true));
+        assertThat(movies.get(0).getMovieFile().exists(), is(true));
     }
 
     @Test
@@ -163,13 +173,13 @@ public class MovieFileManagerIT {
         movieFileManager.addMoviesToRotatingPool(camera,
                                                  Lists.newArrayList(dcsFile));
 
-        final List<File> rotatingMovies = movieFileManager.listRotatingMovies();
+        final List<Movie> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
 
         movieFileManager.moveRotatingPoolVideoToSavedPool(rotatingMovies.get(0));
-        final List<File> savedMovies = movieFileManager.listSavedMovies();
+        final List<Movie> savedMovies = movieFileManager.listSavedMovies();
         assertThat(savedMovies, hasSize(1));
-        assertThat(savedMovies.get(0).getAbsolutePath(),
+        assertThat(savedMovies.get(0).getMovieFile().getAbsolutePath(),
                    endsWith("/saved/" + camera.getName() + "/" +
                                     movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
     }
@@ -243,6 +253,25 @@ public class MovieFileManagerIT {
         file.createNewFile();
         expectedFiles.add(file);
         assertThat(movieFileManager.getMoviesSince(threeHoursAgo), containsInAnyOrder(expectedFiles.toArray()));
+    }
+
+    @Test
+    public void shouldHavePosterImageWithMovie() throws IOException {
+        final File storageDirectory = movieFileManager.getStorageDirectory();
+
+        final File savedDirectory = new File(storageDirectory, "saved");
+        savedDirectory.mkdir();
+
+        final File cam1 = new File(savedDirectory, "cam1");
+        cam1.mkdirs();
+
+        final File cam1Movie = new File(cam1, "2017-01-01 00:00:00.000.mov");
+        cam1Movie.createNewFile();
+
+        final List<Movie> files = movieFileManager.listSavedMovies();
+
+        assertThat(files, is(notNullValue()));
+        assertThat(files.get(0).getPosterImageFile().exists(), is(true));
     }
 
     private CameraConfiguration readCameraConfig() {

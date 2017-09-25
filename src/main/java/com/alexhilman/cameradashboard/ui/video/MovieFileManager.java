@@ -1,6 +1,9 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
+import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
+import com.alexhilman.cameradashboard.ui.conf.Driver;
+import com.alexhilman.cameradashboard.ui.conf.Type;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
@@ -32,12 +35,18 @@ public class MovieFileManager {
     private static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
+    private final CameraConfiguration cameraConfiguration;
+    private final MotionFrameGrabber motionFrameGrabber;
     private final File storageDirectory;
     private final File rotatingDirectory;
     private final File savedDirectory;
 
     @Inject
-    public MovieFileManager(@Named("cameradashboard.video.location") final String storageDirectory) {
+    public MovieFileManager(final CameraConfiguration cameraConfiguration,
+                            final MotionFrameGrabber motionFrameGrabber,
+                            @Named("cameradashboard.video.location") final String storageDirectory) {
+        this.cameraConfiguration = cameraConfiguration;
+        this.motionFrameGrabber = motionFrameGrabber;
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
         mkDirsIfMissing(this.storageDirectory);
@@ -63,32 +72,36 @@ public class MovieFileManager {
      * |-- saved
      *     |-- cam1
      *         |-- 2017-01-01 00:00:00.000.mov
+     *         |-- 2017-01-01 00:00:00.000.jpg
      *         |-- ...
      *     |-- cam2
      *         |-- 2017-01-01 00:01:00.000.mov
+     *         |-- 2017-01-01 00:01:00.000.jpg
      *         |-- ...
      * |-- rotating
      *     |-- cam1
      *         |-- 2017-10-01 00:00:00.000.mov
+     *         |-- 2017-10-01 00:00:00.000.jpg
      *         |-- ...
      *     |-- cam2
      *         |-- 2017-11-01 00:01:00.000.mov
+     *         |-- 2017-11-01 00:01:00.000.jpg
      *         |-- ...
      * }
      * </pre>
      *
      * @return List of saved movies
      */
-    List<File> listAllMovies() {
-        final ArrayList<File> files = Lists.newArrayList(listRotatingMovies());
+    List<Movie> listAllMovies() {
+        final ArrayList<Movie> files = Lists.newArrayList(listRotatingMovies());
         files.addAll(listSavedMovies());
 
         return files.stream()
-                    .sorted(Comparator.comparing(File::getName))
+                    .sorted(Comparator.comparing(Movie::getName))
                     .collect(toList());
     }
 
-    List<File> listRotatingMovies() {
+    List<Movie> listRotatingMovies() {
         final File[] firstDirectory = storageDirectory.listFiles();
         if (firstDirectory == null) {
             return Collections.emptyList();
@@ -100,7 +113,7 @@ public class MovieFileManager {
                      .orElse(Collections.emptyList());
     }
 
-    List<File> listSavedMovies() {
+    List<Movie> listSavedMovies() {
         final File[] firstDirectory = storageDirectory.listFiles();
         if (firstDirectory == null) {
             return Collections.emptyList();
@@ -194,24 +207,33 @@ public class MovieFileManager {
         return fileName.substring(fileName.lastIndexOf('.') + 1);
     }
 
-    void moveRotatingPoolVideoToSavedPool(final File movieFile) {
-        checkNotNull(movieFile, "movieFile cannot be null");
-        checkArgument(movieFile.exists(), "movieFile must exist");
-        checkArgument(movieFile.getAbsolutePath().contains(getRotatingDirectory().getAbsolutePath()),
-                      "movieFile must be in the rotating directory");
+    void moveRotatingPoolVideoToSavedPool(final Movie movie) {
+        checkNotNull(movie, "movieFile cannot be null");
+        checkArgument(movie.getMovieFile().exists(), "movie file must exist");
+        checkArgument(movie.getMovieFile().getAbsolutePath().contains(getRotatingDirectory().getAbsolutePath()),
+                      "movie file must be in the rotating directory");
 
-        final File cameraDir = new File(getSavedDirectory(), movieFile.getParentFile().getName());
+        final File cameraDir = new File(getSavedDirectory(), movie.getMovieFile().getParentFile().getName());
         mkDirsIfMissing(cameraDir);
 
-        final File newFile = new File(getSavedDirectory(),
-                                      movieFile.getParentFile().getName() + "/" + movieFile.getName());
+        final File newMovieFile = new File(cameraDir, movie.getName());
+        final File newPosterFile = new File(getSavedDirectory(), movie.getPosterImageFile().getName());
 
-        if (!movieFile.renameTo(newFile)) {
-            throw new RuntimeException("Could not rename/move file " + movieFile.getAbsolutePath() + " to " + newFile.getAbsolutePath());
+        if (!movie.getMovieFile().renameTo(newMovieFile)) {
+            throw new RuntimeException("Could not rename/move file " +
+                                               movie.getMovieFile().getAbsolutePath() + " to " +
+                                               newMovieFile.getAbsolutePath());
+        }
+
+        if (!movie.getPosterImageFile().renameTo(newPosterFile)) {
+            throw new RuntimeException("Could not rename/move file " +
+                                               movie.getPosterImageFile().getAbsolutePath() + " to " +
+                                               newPosterFile.getAbsolutePath());
         }
     }
 
-    private List<File> listCameraMovies(final File rotatingDir) {
+    private List<Movie> listCameraMovies(final File rotatingDir) {
+
         final File[] rotatingCameraDirectories = rotatingDir.listFiles();
         if (rotatingCameraDirectories == null) {
             return Collections.emptyList();
@@ -220,7 +242,48 @@ public class MovieFileManager {
         return Arrays.stream(rotatingCameraDirectories)
                      .map(this::listMoviesInDirectory)
                      .flatMap(List::stream)
+                     .map(movieFile -> new Movie(movieFile, getPosterImageFileFrom(movieFile)))
                      .collect(toList());
+    }
+
+    private File getPosterImageFileFrom(final File movieFile) {
+        assert movieFile != null;
+
+        final File posterImageFile = new File(fileNameWithoutExtension(movieFile) + ".jpg");
+        if (!posterImageFile.exists()) {
+            try (final FileOutputStream out = new FileOutputStream(posterImageFile)) {
+                out.write(motionFrameGrabber.grabJpgFrame(movieFile,
+                                                          getCameraForMovie(movieFile).getFrameGrabDelayMillis()));
+            } catch (Exception e) {
+                throw new RuntimeException("Could not grab poster image from movie: " + movieFile.getAbsolutePath(), e);
+            }
+        }
+        return posterImageFile;
+    }
+
+    private Camera getCameraForMovie(final File movieFile) {
+        assert movieFile != null;
+
+        final String cameraName = movieFile.getParentFile().getName();
+        final Optional<Camera> camera = cameraConfiguration.getCameras()
+                                                           .stream()
+                                                           .filter(c -> c.getName().equals(cameraName))
+                                                           .findFirst();
+
+        if (!camera.isPresent()) {
+            LOG.info(
+                    "No camera configuration found for {}; using a dummy configuration instead",
+                    cameraName);
+            return new Camera("dummy",
+                              "dummy",
+                              cameraName,
+                              "http://localhost",
+                              "admin",
+                              "password",
+                              3000,
+                              new Driver(Type.dummy, "Dummy"));
+        }
+        return camera.get();
     }
 
     private List<File> listMoviesInDirectory(final File directory) {

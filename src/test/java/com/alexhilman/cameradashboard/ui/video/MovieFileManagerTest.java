@@ -2,13 +2,16 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
+import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -20,13 +23,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class MovieFileManagerTest {
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private MovieFileManager movieFileManager;
     private Camera camera;
     private List<DcsFile> mockFiles;
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager("/tmp/.camera-dashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.camera-dashboard");
 
         camera = mock(Camera.class);
         when(camera.getName()).thenReturn("cam1");
@@ -71,5 +75,18 @@ public class MovieFileManagerTest {
 
         final File rotatingDirectoryForCamera = movieFileManager.getRotatingDirectoryForCamera(camera);
         assertThat(Lists.newArrayList(rotatingDirectoryForCamera.listFiles()), hasSize(5));
+    }
+
+    private CameraConfiguration readCameraConfig() {
+        final CameraConfiguration cameraConfiguration;
+        try {
+            cameraConfiguration =
+                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
+                                            CameraConfiguration.class);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return cameraConfiguration;
     }
 }

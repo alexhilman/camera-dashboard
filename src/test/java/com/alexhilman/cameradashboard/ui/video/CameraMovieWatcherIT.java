@@ -24,7 +24,7 @@ public class CameraMovieWatcherIT {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager("/tmp/.cameradashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.cameradashboard");
         final CameraConfiguration cameraConfiguration;
         try {
             cameraConfiguration =
@@ -63,5 +63,18 @@ public class CameraMovieWatcherIT {
         final List<Camera> cameras = cameraMovieWatcher.getCameras();
 
         assertThat(cameras, hasSize(1));
+    }
+
+    private CameraConfiguration readCameraConfig() {
+        final CameraConfiguration cameraConfiguration;
+        try {
+            cameraConfiguration =
+                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
+                                            CameraConfiguration.class);
+        } catch (IOException e) {
+            throw new IllegalStateException(e);
+        }
+
+        return cameraConfiguration;
     }
 }
