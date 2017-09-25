@@ -6,7 +6,8 @@
       "name": "DCS-936L",
       "networkAddress": "http://192.168.1.4/",
       "username": "admin",
-      "password": "TotallyNotASmoker",
+      "password": "password",
+      "frameGrabDelayMillis": 3000,
       "driver": {
         "type": "browser",
         "implementation": "com.alexhilman.dlink.dcs936.Dcs936Client"

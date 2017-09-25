@@ -37,6 +37,7 @@ public class CameraMovieWatcherTest {
                                    "http://localhost:8080",
                                    "user",
                                    "pass",
+                                   3000,
                                    new Driver(Type.browser, Dcs936Client.class.getName()))
                 )
         );

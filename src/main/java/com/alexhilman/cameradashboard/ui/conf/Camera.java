@@ -14,6 +14,7 @@ public class Camera {
     private final String networkAddress;
     private final String username;
     private final String password;
+    private final int frameGrabDelayMillis;
     private final Driver driver;
 
     @JsonCreator
@@ -23,6 +24,7 @@ public class Camera {
                   @JsonProperty(value = "networkAddress", required = true) final String networkAddress,
                   @JsonProperty("username") final String username,
                   @JsonProperty("password") final String password,
+                  @JsonProperty("frameGrabDelayMillis") final int frameGrabDelayMillis,
                   @JsonProperty(value = "driver", required = true) final Driver driver) {
         this.make = checkNotNull(make, "make cannot be null");
         this.model = checkNotNull(model, "model cannot be null");
@@ -30,6 +32,7 @@ public class Camera {
         this.networkAddress = checkNotNull(networkAddress, "networkAddress cannot be null");
         this.username = username;
         this.password = password;
+        this.frameGrabDelayMillis = frameGrabDelayMillis;
         this.driver = checkNotNull(driver, "driver cannot be null");
     }
 
@@ -57,6 +60,10 @@ public class Camera {
         return password;
     }
 
+    public int getFrameGrabDelayMillis() {
+        return frameGrabDelayMillis;
+    }
+
     public Driver getDriver() {
         return driver;
     }
@@ -68,6 +75,7 @@ public class Camera {
 
         final Camera camera = (Camera) o;
 
+        if (frameGrabDelayMillis != camera.frameGrabDelayMillis) return false;
         if (!make.equals(camera.make)) return false;
         if (!model.equals(camera.model)) return false;
         if (!name.equals(camera.name)) return false;
@@ -85,6 +93,7 @@ public class Camera {
         result = 31 * result + networkAddress.hashCode();
         result = 31 * result + (username != null ? username.hashCode() : 0);
         result = 31 * result + (password != null ? password.hashCode() : 0);
+        result = 31 * result + frameGrabDelayMillis;
         result = 31 * result + driver.hashCode();
         return result;
     }
@@ -98,6 +107,7 @@ public class Camera {
                 ", networkAddress='" + networkAddress + '\'' +
                 ", username='" + username + '\'' +
                 ", password='" + password + '\'' +
+                ", frameGrabDelayMillis=" + frameGrabDelayMillis +
                 ", driver=" + driver +
                 '}';
     }

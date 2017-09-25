@@ -3,6 +3,7 @@ package com.alexhilman.cameradashboard.ui.view;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
+import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.server.FileResource;
 import com.vaadin.ui.*;
@@ -33,10 +34,10 @@ public class Movies implements View {
         final Panel todayMovies = new Panel("Movies");
         components.addComponent(todayMovies);
 
-        final HorizontalLayout movieContent = new HorizontalLayout();
-        todayMovies.setContent(movieContent);
+        final HorizontalLayout moviePreviewTiles = new HorizontalLayout();
+        todayMovies.setContent(moviePreviewTiles);
 
-        movieContent.addComponents(buildVideosFor(movieFileManager.getMoviesSince(Instant.EPOCH)));
+        moviePreviewTiles.addComponents(buildVideosFor(movieFileManager.getMoviesSince(Instant.EPOCH)));
 
         return components;
     }
@@ -45,10 +46,12 @@ public class Movies implements View {
         return moviesSince.stream()
                           .sorted(Comparator.comparing(File::getName))
                           .map(movie -> {
-                              final Video video = new Video(movie.getName());
+                              final Video video = new Video();
+                              video.setSource(new FileResource(movie));
                               video.setHtmlContentAllowed(true);
                               video.setAltText("Cannot play video");
-                              video.setSource(new FileResource(movie));
+                              video.setPoster(VaadinIcons.PLAY_CIRCLE_O);
+                              video.addContextClickListener(event -> video.play());
                               return video;
                           })
                           .collect(toList())
