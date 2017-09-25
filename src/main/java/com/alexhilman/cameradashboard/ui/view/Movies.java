@@ -3,6 +3,7 @@ package com.alexhilman.cameradashboard.ui.view;
 import com.alexhilman.cameradashboard.ui.video.Movie;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.alexhilman.cameradashboard.ui.video.MovieHelper;
+import com.alexhilman.cameradashboard.ui.video.MovieResourceHelper;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
@@ -13,7 +14,6 @@ import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 
-import java.io.File;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -33,12 +33,15 @@ public class Movies implements View {
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:s a");
     private final MovieFileManager movieFileManager;
     private final MovieHelper movieHelper;
+    private final MovieResourceHelper movieResourceHelper;
 
     @Inject
     public Movies(final MovieFileManager movieFileManager,
-                  final MovieHelper movieHelper) {
+                  final MovieHelper movieHelper,
+                  final MovieResourceHelper movieResourceHelper) {
         this.movieFileManager = movieFileManager;
         this.movieHelper = movieHelper;
+        this.movieResourceHelper = movieResourceHelper;
     }
 
     @Override
@@ -80,8 +83,9 @@ public class Movies implements View {
                                                     final Image image =
                                                             new Image(null,
                                                                       new ExternalResource(
-                                                                              "/movies/" + contextResourceNameFor(
-                                                                                      movie.getPosterImageFile())));
+                                                                              "/movies/" +
+                                                                                      movieResourceHelper.contextResourceNameFor(
+                                                                                              movie.getPosterImageFile())));
 
                                                     image.setWidth(20, Sizeable.Unit.EM);
                                                     image.addClickListener(event -> ClassNavigator.navigateTo(WatchMovie.class));
@@ -97,7 +101,8 @@ public class Movies implements View {
                                                                                new Label(movieDateTime.toLocalTime()
                                                                                                       .format(TIME_FORMATTER)));
                                                     final Duration runningTime = movieHelper.runningLengthFor(movie);
-                                                    movieDetails.addComponents(new Label("Length:&nbsp;", ContentMode.HTML),
+                                                    movieDetails.addComponents(new Label("Length:&nbsp;",
+                                                                                         ContentMode.HTML),
                                                                                new Label(runningTime.toMinutes() + ":" +
                                                                                                  runningTime.minus(
                                                                                                          runningTime.toMinutes(),
@@ -124,12 +129,6 @@ public class Movies implements View {
         components.setExpandRatio(firstRule, 1);
         components.setExpandRatio(secondRule, 1);
         return components;
-    }
-
-    private String contextResourceNameFor(final File file) {
-        final String absolutePath = movieFileManager.getStorageDirectory().getAbsolutePath();
-        final String substring = file.getAbsolutePath().substring(absolutePath.length() + 1);
-        return substring;
     }
 
     private Instant midnightThisMorning() {
