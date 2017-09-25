@@ -3,7 +3,9 @@ package com.alexhilman.cameradashboard.ui;
 import com.google.common.base.Strings;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
+import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.server.handler.ShutdownHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
@@ -38,6 +40,12 @@ public class App {
         try {
             final Server server = new Server(PORT);
 
+            final ResourceHandler resourceHandler = new ResourceHandler();
+            resourceHandler.setDirectoriesListed(true);
+            resourceHandler.setResourceBase(cameraDashboardProperties.getProperty("cameradashboard.video.location"));
+            final ContextHandler moviesContext = new ContextHandler("/movies");
+            moviesContext.setHandler(resourceHandler);
+
             final WebAppContext webAppContext = new WebAppContext() {
                 @Override
                 protected void doStart() throws Exception {
@@ -49,7 +57,7 @@ public class App {
                 }
             };
             webAppContext.setDisplayName("Camera Dashboard");
-            webAppContext.setContextPath("/");
+            webAppContext.setContextPath("/ui");
             final ServletHolder servletHolder = webAppContext.addServlet(MyVaadinUI.MyVaadinServlet.class, "/*");
             servletHolder.setInitOrder(0);
             webAppContext.setBaseResource(Resource.newClassPathResource("webapp"));
@@ -67,7 +75,7 @@ public class App {
             }));
 
             final HandlerList handlerList = new HandlerList();
-            handlerList.setHandlers(new Handler[]{shutdownHandler, webAppContext});
+            handlerList.setHandlers(new Handler[]{shutdownHandler, moviesContext, webAppContext});
             server.setHandler(handlerList);
 
             server.start();

@@ -58,7 +58,7 @@ public class MovieFileManager {
         mkDirsIfMissing(savedDirectory);
     }
 
-    File getStorageDirectory() {
+    public File getStorageDirectory() {
         return storageDirectory;
     }
 
@@ -249,7 +249,7 @@ public class MovieFileManager {
     private File getPosterImageFileFrom(final File movieFile) {
         assert movieFile != null;
 
-        final File posterImageFile = new File(fileNameWithoutExtension(movieFile) + ".jpg");
+        final File posterImageFile = new File(movieFile.getParentFile(), fileNameWithoutExtension(movieFile) + ".jpg");
         if (!posterImageFile.exists()) {
             try (final FileOutputStream out = new FileOutputStream(posterImageFile)) {
                 out.write(motionFrameGrabber.grabJpgFrame(movieFile,
@@ -381,7 +381,7 @@ public class MovieFileManager {
         return storageDirectory.getTotalSpace();
     }
 
-    public List<File> getMoviesSince(final Instant instant) {
+    public List<Movie> getMoviesSince(final Instant instant) {
         final String dateString = instant.atZone(ZoneId.systemDefault()).format(STORAGE_FILE_DATET_TIME_FORMAT);
         return Stream.of(rotatingDirectory, savedDirectory)
                      .map(File::listFiles)
@@ -396,6 +396,7 @@ public class MovieFileManager {
                                       .collect(toList());
                      })
                      .flatMap(List::stream)
+                     .map(movieFile -> new Movie(movieFile, getPosterImageFileFrom(movieFile)))
                      .collect(toList());
     }
 }
