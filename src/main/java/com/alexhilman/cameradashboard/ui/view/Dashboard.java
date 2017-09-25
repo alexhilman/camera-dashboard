@@ -55,7 +55,9 @@ public class Dashboard implements View {
 
         final float progress = (float) ((double) usedSpace / (double) totalSpace);
         progressBar.setValue(progress);
-        progressBar.setCaption("Free space: " + humanReadableByteCount(usableSpace));
+        progressBar.setCaption("Storage space: " + humanReadableByteCount(usedSpace) +
+                                       " used out of " + humanReadableByteCount(totalSpace) +
+                                       " (" + humanReadableByteCount(usableSpace) + " free)");
 
         todayMovies.setContent(buildMoviesComponent());
     }
