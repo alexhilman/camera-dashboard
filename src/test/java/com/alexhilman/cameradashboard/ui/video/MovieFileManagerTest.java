@@ -30,7 +30,7 @@ public class MovieFileManagerTest {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.camera-dashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.camera-dashboard");
 
         camera = mock(Camera.class);
         when(camera.getName()).thenReturn("cam1");

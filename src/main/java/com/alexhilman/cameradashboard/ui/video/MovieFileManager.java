@@ -32,21 +32,21 @@ import static java.util.stream.Collectors.toList;
  */
 @Singleton
 public class MovieFileManager {
-    private static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
+    public static final DateTimeFormatter STORAGE_FILE_DATET_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS");
     private static final Logger LOG = LogManager.getLogger(MovieFileManager.class);
     private final CameraConfiguration cameraConfiguration;
-    private final MotionFrameGrabber motionFrameGrabber;
+    private final MovieHelper movieHelper;
     private final File storageDirectory;
     private final File rotatingDirectory;
     private final File savedDirectory;
 
     @Inject
     public MovieFileManager(final CameraConfiguration cameraConfiguration,
-                            final MotionFrameGrabber motionFrameGrabber,
+                            final MovieHelper movieHelper,
                             @Named("cameradashboard.video.location") final String storageDirectory) {
         this.cameraConfiguration = cameraConfiguration;
-        this.motionFrameGrabber = motionFrameGrabber;
+        this.movieHelper = movieHelper;
         this.storageDirectory = new File(checkNotNull(storageDirectory, "storageDirectory cannot be null"));
 
         mkDirsIfMissing(this.storageDirectory);
@@ -252,8 +252,8 @@ public class MovieFileManager {
         final File posterImageFile = new File(movieFile.getParentFile(), fileNameWithoutExtension(movieFile) + ".jpg");
         if (!posterImageFile.exists()) {
             try (final FileOutputStream out = new FileOutputStream(posterImageFile)) {
-                out.write(motionFrameGrabber.grabJpgFrame(movieFile,
-                                                          getCameraForMovie(movieFile).getFrameGrabDelayMillis()));
+                out.write(movieHelper.grabJpgFrame(movieFile,
+                                                   getCameraForMovie(movieFile).getFrameGrabDelayMillis()));
             } catch (Exception e) {
                 throw new RuntimeException("Could not grab poster image from movie: " + movieFile.getAbsolutePath(), e);
             }

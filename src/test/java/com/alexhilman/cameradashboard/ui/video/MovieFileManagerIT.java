@@ -29,7 +29,7 @@ public class MovieFileManagerIT {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.camera-dashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.camera-dashboard");
     }
 
     @After

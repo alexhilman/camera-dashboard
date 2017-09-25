@@ -1,6 +1,7 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import java.io.File;
+import java.time.LocalDateTime;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -52,5 +53,11 @@ public class Movie {
 
     public String getName() {
         return movieFile.getName();
+    }
+
+    public LocalDateTime getDateTime() {
+        final String dateTimeString = movieFile.getName().substring(0, movieFile.getName().lastIndexOf('.'));
+
+        return LocalDateTime.parse(dateTimeString, MovieFileManager.STORAGE_FILE_DATET_TIME_FORMAT);
     }
 }

@@ -24,7 +24,7 @@ public class CameraMovieWatcherIT {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager(readCameraConfig(), new MotionFrameGrabber(), "/tmp/.cameradashboard");
+        movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.cameradashboard");
         final CameraConfiguration cameraConfiguration;
         try {
             cameraConfiguration =
