@@ -5,7 +5,7 @@ import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.cameradashboard.ui.video.Movie;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
 import com.alexhilman.cameradashboard.ui.video.MovieHelper;
-import com.alexhilman.cameradashboard.ui.video.MovieResourceHelper;
+import com.alexhilman.cameradashboard.ui.video.MovieViewHelper;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
 import com.vaadin.navigator.View;
@@ -25,7 +25,7 @@ import java.util.Optional;
 public class WatchMovie implements View {
     private final MovieFileManager movieFileManager;
     private final MovieHelper movieHelper;
-    private final MovieResourceHelper movieResourceHelper;
+    private final MovieViewHelper movieViewHelper;
     private final CameraConfiguration cameraConfiguration;
 
     private Video video;
@@ -33,11 +33,11 @@ public class WatchMovie implements View {
     @Inject
     public WatchMovie(final MovieFileManager movieFileManager,
                       final MovieHelper movieHelper,
-                      final MovieResourceHelper movieResourceHelper,
+                      final MovieViewHelper movieViewHelper,
                       final CameraConfiguration cameraConfiguration) {
         this.movieFileManager = movieFileManager;
         this.movieHelper = movieHelper;
-        this.movieResourceHelper = movieResourceHelper;
+        this.movieViewHelper = movieViewHelper;
         this.cameraConfiguration = cameraConfiguration;
     }
 
@@ -80,7 +80,7 @@ public class WatchMovie implements View {
 
         final Movie movie = optionalMovie.get();
 
-        video.setSource(movieResourceHelper.movieResourceFor(movie));
+        video.setSource(movieViewHelper.movieResourceFor(movie));
         video.play();
     }
 }

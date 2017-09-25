@@ -1,13 +1,12 @@
 package com.alexhilman.cameradashboard.ui.view;
 
-import com.alexhilman.cameradashboard.ui.video.Movie;
 import com.alexhilman.cameradashboard.ui.video.MovieFileManager;
+import com.alexhilman.cameradashboard.ui.video.MovieViewHelper;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Sizeable;
 import com.vaadin.ui.*;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +15,6 @@ import org.apache.logging.log4j.Logger;
 import java.io.File;
 import java.time.Instant;
 import java.time.ZoneId;
-import java.util.Comparator;
-import java.util.List;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  */
@@ -28,13 +23,16 @@ public class Dashboard implements View {
     private static final Logger LOG = LogManager.getLogger(Dashboard.class);
 
     private final MovieFileManager movieFileManager;
+    private final MovieViewHelper movieViewHelper;
     private VerticalLayout rootLayout;
     private ProgressBar progressBar;
     private Panel todayMovies;
 
     @Inject
-    public Dashboard(final MovieFileManager movieFileManager) {
+    public Dashboard(final MovieFileManager movieFileManager,
+                     final MovieViewHelper movieViewHelper) {
         this.movieFileManager = movieFileManager;
+        this.movieViewHelper = movieViewHelper;
     }
 
     @Override
@@ -67,25 +65,8 @@ public class Dashboard implements View {
 
         final HorizontalLayout moviePreviewTiles = new HorizontalLayout();
         todayMovies.setContent(moviePreviewTiles);
-        moviePreviewTiles.addComponents(buildVideoTilesFor(movieFileManager.getMoviesSince(midnightThisMorning())));
-    }
-
-    private Component[] buildVideoTilesFor(final List<Movie> moviesSince) {
-        return moviesSince.stream()
-                          .sorted(Comparator.comparing(Movie::getName))
-                          .map(movie -> {
-                              final Image image = new Image(null,
-                                                            new ExternalResource("/movies/" + contextResourceNameFor(
-                                                                    movie.getPosterImageFile())));
-                              image.setWidth(20, Sizeable.Unit.EM);
-
-                              image.addClickListener(event -> {
-                                  ClassNavigator.navigateTo(WatchMovie.class);
-                              });
-                              return image;
-                          })
-                          .collect(toList())
-                          .toArray(new Component[moviesSince.size()]);
+        moviePreviewTiles.addComponents(
+                movieViewHelper.buildPostersFor(movieFileManager.getMoviesSince(midnightThisMorning())));
     }
 
     private String contextResourceNameFor(final File file) {
