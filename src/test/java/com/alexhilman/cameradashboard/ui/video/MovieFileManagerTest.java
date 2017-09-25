@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -19,8 +20,6 @@ import java.util.stream.IntStream;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class MovieFileManagerTest {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -30,10 +29,10 @@ public class MovieFileManagerTest {
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.camera-dashboard");
+        final CameraConfiguration cameraConfiguration = readCameraConfig();
+        movieFileManager = new MovieFileManager(cameraConfiguration, new MovieHelper(), "/tmp/.camera-dashboard");
 
-        camera = mock(Camera.class);
-        when(camera.getName()).thenReturn("cam1");
+        camera = cameraConfiguration.getCameras().get(0);
 
         mockFiles = IntStream.range(0, 5)
                              .mapToObj(i -> Fixtures.randomDcsFile())
@@ -75,6 +74,16 @@ public class MovieFileManagerTest {
 
         final File rotatingDirectoryForCamera = movieFileManager.getRotatingDirectoryForCamera(camera);
         assertThat(Lists.newArrayList(rotatingDirectoryForCamera.listFiles()), hasSize(5));
+    }
+
+    @Test
+    public void shouldGetCameraForMovie() {
+        movieFileManager.addMoviesToRotatingPool(camera, mockFiles);
+
+        movieFileManager.getMoviesSince(Instant.EPOCH)
+                        .forEach(movie -> {
+                            assertThat(movieFileManager.getCameraForMovie(movie), is(camera));
+                        });
     }
 
     private CameraConfiguration readCameraConfig() {

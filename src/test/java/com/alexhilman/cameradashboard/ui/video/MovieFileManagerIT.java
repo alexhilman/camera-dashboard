@@ -13,23 +13,25 @@ import org.junit.Test;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.IntStream;
 
 import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.movieFileNameFor;
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.time.temporal.ChronoUnit.HOURS;
+import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class MovieFileManagerIT {
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private MovieFileManager movieFileManager;
+    private Camera camera;
 
     @Before
     public void setup() {
-        movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.camera-dashboard");
+        final CameraConfiguration cameraConfiguration = readCameraConfig();
+        camera = cameraConfiguration.getCameras().get(0);
+        movieFileManager = new MovieFileManager(cameraConfiguration, new MovieHelper(), "/tmp/.camera-dashboard");
     }
 
     @After
@@ -72,8 +74,8 @@ public class MovieFileManagerIT {
         cam1.mkdirs();
         cam2.mkdirs();
 
-        final File cam1Movie = new File(cam1, "2017-01-01 00:00:00.000.mov");
-        final File cam2Movie = new File(cam2, "2017-01-01 00:00:00.000.mov");
+        final File cam1Movie = Fixtures.randomRealMovieFile();
+        final File cam2Movie = Fixtures.randomRealMovieFile();
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
@@ -98,8 +100,8 @@ public class MovieFileManagerIT {
         cam1.mkdirs();
         cam2.mkdirs();
 
-        final File cam1Movie = new File(cam1, "2017-01-01 00:00:00.000.mov");
-        final File cam2Movie = new File(cam2, "2017-01-01 00:00:00.000.mov");
+        final File cam1Movie = Fixtures.randomRealMovieFile();
+        final File cam2Movie = Fixtures.randomRealMovieFile();
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
@@ -124,8 +126,8 @@ public class MovieFileManagerIT {
         cam1Saved.mkdirs();
         cam2Saved.mkdirs();
 
-        final File cam1Movie1 = new File(cam1Saved, "2017-01-01 00:00:00.000.mov");
-        final File cam2Movie1 = new File(cam2Saved, "2017-01-01 00:00:00.000.mov");
+        final File cam1Movie1 = Fixtures.randomRealMovieFile();
+        final File cam2Movie1 = Fixtures.randomRealMovieFile();
         cam1Movie1.createNewFile();
         cam2Movie1.createNewFile();
 
@@ -137,8 +139,8 @@ public class MovieFileManagerIT {
         cam1Rotating.mkdirs();
         cam2Rotating.mkdirs();
 
-        final File cam1Movie2 = new File(cam1Rotating, "2017-01-01 00:00:00.000.mov");
-        final File cam2Movie2 = new File(cam2Rotating, "2017-01-01 00:00:00.000.mov");
+        final File cam1Movie2 = Fixtures.randomRealMovieFile();
+        final File cam2Movie2 = Fixtures.randomRealMovieFile();
         cam1Movie2.createNewFile();
         cam2Movie2.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie1, cam2Movie1, cam1Movie2, cam2Movie2);
@@ -220,58 +222,54 @@ public class MovieFileManagerIT {
 
     @Test
     public void shouldListMoviesSinceInstant() throws IOException {
-        final List<File> expectedFiles = Lists.newArrayList();
+        final List<DcsFile> dcsFiles =
+                IntStream.range(0, 5)
+                         .mapToObj(i -> Fixtures.randomDcsFile())
+                         .distinct()
+                         .collect(toList());
 
-        final CameraConfiguration cameraConfiguration = readCameraConfig();
-        final File unknownStorage = new File(movieFileManager.getRotatingDirectory(), "unknowncam1");
-        unknownStorage.mkdir();
+        movieFileManager.addMoviesToRotatingPool(camera, dcsFiles);
 
-        final Instant threeHoursAgo = Instant.now().minus(3, HOURS);
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), is(empty()));
+        final Instant oldestInstant = dcsFiles.stream()
+                                              .sorted(Comparator.comparing(DcsFile::getCreatedInstant))
+                                              .map(DcsFile::getCreatedInstant)
+                                              .findFirst()
+                                              .get();
 
-        new File(unknownStorage, movieFileNameFor(Instant.EPOCH, "mp4")).createNewFile();
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), is(empty()));
-
-        final File rotatingDirectoryForCamera =
-                movieFileManager.getRotatingDirectoryForCamera(cameraConfiguration.getCameras().get(0));
-        File file = new File(rotatingDirectoryForCamera, movieFileNameFor(Instant.now(), "mp4"));
-        file.createNewFile();
-        expectedFiles.add(file);
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), contains(file));
-
-        new File(unknownStorage, movieFileNameFor(Instant.now(), "jpg")).createNewFile();
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), contains(file));
-
-        file = new File(unknownStorage, movieFileNameFor(Instant.now(), "mp4"));
-        file.createNewFile();
-        expectedFiles.add(file);
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), containsInAnyOrder(expectedFiles.toArray()));
-
-        final File savedDirectory =
-                movieFileManager.getSavedDirectoryForCamera(cameraConfiguration.getCameras().get(0));
-        file = new File(savedDirectory, movieFileNameFor(threeHoursAgo, "mp4"));
-        file.createNewFile();
-        expectedFiles.add(file);
-        assertThat(movieFileManager.getMoviesSince(threeHoursAgo), containsInAnyOrder(expectedFiles.toArray()));
+        assertThat(movieFileManager.getMoviesSince(Instant.now()), is(empty()));
+        assertThat(movieFileManager.getMoviesSince(oldestInstant), hasSize(5));
     }
 
     @Test
     public void shouldHavePosterImageWithMovie() throws IOException {
-        final File storageDirectory = movieFileManager.getStorageDirectory();
+        final DcsFile file = Fixtures.randomDcsFile();
+        movieFileManager.addMoviesToRotatingPool(camera, Lists.newArrayList(file));
 
-        final File savedDirectory = new File(storageDirectory, "saved");
-        savedDirectory.mkdir();
+        final List<Movie> movies = movieFileManager.getMoviesSince(Instant.EPOCH);
+        assertThat(movies, hasSize(1));
 
-        final File cam1 = new File(savedDirectory, "cam1");
-        cam1.mkdirs();
+        assertThat(movies.get(0).getPosterImageFile(), is(notNullValue()));
+        assertThat(movies.get(0).getPosterImageFile().exists(), is(true));
+    }
 
-        final File cam1Movie = new File(cam1, "2017-01-01 00:00:00.000.mov");
-        cam1Movie.createNewFile();
+    @Test
+    public void shouldFindMovieForCamera() {
+        final List<DcsFile> files = IntStream.range(0, 10)
+                                             .mapToObj(i -> Fixtures.randomDcsFile())
+                                             .collect(toList());
 
-        final List<Movie> files = movieFileManager.listSavedMovies();
+        movieFileManager.addMoviesToRotatingPool(camera, files);
+        final List<Movie> allMovies = movieFileManager.getMoviesSince(Instant.EPOCH);
+        movieFileManager.moveRotatingPoolVideoToSavedPool(allMovies.get(0));
 
-        assertThat(files, is(notNullValue()));
-        assertThat(files.get(0).getPosterImageFile().exists(), is(true));
+        final Optional<Movie> optionallySavedMovie = movieFileManager.findMovie(camera, allMovies.get(0).getName());
+        assertThat(optionallySavedMovie.isPresent(), is(true));
+
+        final Movie savedMovie = optionallySavedMovie.get();
+        assertThat(savedMovie.getName(), is(allMovies.get(0).getName()));
+        assertThat(savedMovie.getMovieFile().getParentFile().getParentFile().getName(), is("saved"));
+
+        assertThat(movieFileManager.findMovie(camera, allMovies.get(4).getName()).get(), is(allMovies.get(4)));
     }
 
     private CameraConfiguration readCameraConfig() {

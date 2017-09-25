@@ -9,11 +9,12 @@ import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
 import com.vaadin.icons.VaadinIcons;
 import com.vaadin.navigator.View;
-import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
 import com.vaadin.ui.*;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -82,13 +83,14 @@ public class Movies implements View {
                                                     final HorizontalLayout posterLayout = new HorizontalLayout();
                                                     final Image image =
                                                             new Image(null,
-                                                                      new ExternalResource(
-                                                                              "/movies/" +
-                                                                                      movieResourceHelper.contextResourceNameFor(
-                                                                                              movie.getPosterImageFile())));
+                                                                      movieResourceHelper.posterResourceFor(movie));
 
                                                     image.setWidth(20, Sizeable.Unit.EM);
-                                                    image.addClickListener(event -> ClassNavigator.navigateTo(WatchMovie.class));
+                                                    image.addClickListener(event -> {
+                                                        ClassNavigator.navigateTo(
+                                                                WatchMovie.class,
+                                                                movieContextPathFor(movie));
+                                                    });
                                                     posterLayout.addComponent(image);
 
                                                     final GridLayout movieDetails = new GridLayout(2, 3);
@@ -116,6 +118,15 @@ public class Movies implements View {
                           .flatMap(List::stream)
                           .collect(toList())
                           .toArray(new Component[moviesSince.size()]);
+    }
+
+    private String movieContextPathFor(final Movie movie) {
+        try {
+            return URLEncoder.encode(movieFileManager.getCameraForMovie(movie).getName(),
+                                     "utf-8") + "/" + URLEncoder.encode(movie.getName(), "utf-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private Component dateSeparatorComponentFor(final LocalDate date) {

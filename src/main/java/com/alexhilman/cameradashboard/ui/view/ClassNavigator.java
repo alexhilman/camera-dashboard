@@ -18,6 +18,10 @@ public class ClassNavigator {
         UI.getCurrent().getNavigator().navigateTo(viewNameFromClass(clazz));
     }
 
+    public static void navigateTo(final Class<? extends View> clazz, final String encodedParameters) {
+        UI.getCurrent().getNavigator().navigateTo(viewNameFromClass(clazz) + "/" + encodedParameters);
+    }
+
     private static String viewNameFromClass(final Class<? extends View> clazz) {
         String name = viewNameByClass.get(clazz);
         if (name == null) {

@@ -44,7 +44,7 @@ public class Fixtures {
         return file;
     }
 
-    private static File randomRealMovieFile() {
+    public static File randomRealMovieFile() {
         final File[] files = SOURCE_MOVIES.listFiles();
         if (!SOURCE_MOVIES.exists() || files == null) {
             throw new IllegalStateException("Source movies folder does not have any files");

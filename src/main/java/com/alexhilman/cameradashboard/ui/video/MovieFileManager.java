@@ -399,4 +399,25 @@ public class MovieFileManager {
                      .map(movieFile -> new Movie(movieFile, getPosterImageFileFrom(movieFile)))
                      .collect(toList());
     }
+
+    public Camera getCameraForMovie(final Movie movie) {
+        checkNotNull(movie, "movie cannot be null");
+        return getCameraForMovie(movie.getMovieFile());
+    }
+
+    public Optional<Movie> findMovie(final Camera camera, final String fileName) {
+        checkNotNull(camera, "camera cannot be null");
+        checkNotNull(fileName, "fileName cannot be null");
+
+        File[] files = getSavedDirectoryForCamera(camera).listFiles((dir, name) -> name.equals(fileName));
+        if (files == null || files.length == 0) {
+            files = getRotatingDirectoryForCamera(camera).listFiles((dir, name) -> name.equals(fileName));
+        }
+
+        if (files != null && files.length > 0) {
+            return Optional.of(new Movie(files[0], getPosterImageFileFrom(files[0])));
+        }
+
+        return Optional.empty();
+    }
 }
