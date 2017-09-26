@@ -88,12 +88,14 @@ public class Dashboard implements View {
 
     private Component buildLoadingSpinner() {
         final HorizontalLayout layout = new HorizontalLayout();
+        layout.setMargin(true);
+        layout.setSpacing(true);
         layout.setSizeFull();
 
         final ProgressBar progressBar = new ProgressBar();
         progressBar.setIndeterminate(true);
 
-        layout.addComponentsAndExpand(progressBar);
+        layout.addComponent(progressBar);
         layout.setComponentAlignment(progressBar, Alignment.MIDDLE_CENTER);
 
         return layout;
