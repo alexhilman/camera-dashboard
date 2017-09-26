@@ -4,7 +4,7 @@
 
     <groupId>com.alexhilman.cameradashboard.ui</groupId>
     <artifactId>camera-dashboard</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1-alpha1</version>
     <packaging>jar</packaging>
 
     <name>camera-dashboard</name>
@@ -145,7 +145,7 @@
         <dependency>
             <groupId>com.alexhilman.cameradashboard.driver.dlink</groupId>
             <artifactId>dcs-936-driver</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>0.1-alpha1</version>
         </dependency>
 
         <dependency>
