@@ -10,10 +10,9 @@ import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.ui.Component;
-import com.vaadin.ui.Notification;
-import com.vaadin.ui.VerticalLayout;
-import com.vaadin.ui.Video;
+import com.vaadin.server.Sizeable;
+import com.vaadin.ui.*;
+import com.vaadin.ui.themes.ValoTheme;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -43,12 +42,20 @@ public class WatchMovie implements View {
 
     @Override
     public Component getViewComponent() {
-        final VerticalLayout movieContainer = new VerticalLayout();
+        final Panel container = new Panel();
+        container.setSizeFull();
+        container.setStyleName(ValoTheme.PANEL_BORDERLESS);
+
+        final VerticalLayout layout = new VerticalLayout();
+        container.setContent(layout);
+        layout.setSizeFull();
 
         video = new Video();
-        movieContainer.addComponent(video);
+        video.setWidth(90, Sizeable.Unit.PERCENTAGE);
+        video.setSizeFull();
+        layout.addComponentsAndExpand(video);
 
-        return movieContainer;
+        return container;
     }
 
     @Override
