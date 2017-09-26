@@ -39,6 +39,8 @@ public class Dashboard implements View {
     @Override
     public Component getViewComponent() {
         rootLayout = new VerticalLayout();
+        rootLayout.setMargin(true);
+        rootLayout.setSpacing(true);
 
         progressBar = new ProgressBar(0f);
         progressBar.setWidth(100, Sizeable.Unit.PERCENTAGE);
@@ -46,8 +48,8 @@ public class Dashboard implements View {
 
         todayMovies = new Panel("Today's Movies");
         todayMovies.setIcon(VaadinIcons.FILM);
-        todayMovies.setWidth(100, Sizeable.Unit.PERCENTAGE);
-        rootLayout.addComponent(todayMovies);
+        todayMovies.setSizeFull();
+        rootLayout.addComponentsAndExpand(todayMovies);
 
         return rootLayout;
     }
