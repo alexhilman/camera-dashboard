@@ -412,7 +412,11 @@ public class MovieFileManager {
                                       .collect(toList());
                      })
                      .flatMap(List::stream)
+                     .collect(toList())
+                     .stream()
+                     .parallel() // in case we need to generate the poster images: 4c is better than 1c
                      .map(movieFile -> new Movie(movieFile, getPosterImageFileFrom(movieFile)))
+                     .sorted((m1, m2) -> m2.getDateTime().compareTo(m1.getDateTime()))
                      .collect(toList());
     }
 
