@@ -1,3 +1,6 @@
 #!/usr/bin/env bash
 
-exec java -server -XX:+HeapDumpOnOutOfMemoryError -Xmx512m -classpath 'lib/*' -Dlog4j.configurationFile=conf/log4j2.xml -Dcamdash.configurationDir=conf com.alexhilman.cameradashboard.ui.App
+dir=$(basename "$0")
+cd "$dir" || exit 1
+
+exec java -server -XX:+HeapDumpOnOutOfMemoryError -Xmx512m -classpath 'lib/*' -Dlog4j.configurationFile=conf/log4j2.xml -Dcamdash.configurationDir=conf com.a$
