@@ -179,6 +179,12 @@ public class MovieFileManager {
                         if (!tmpFile.renameTo(newFile)) {
                             throw new RuntimeException("Could not move file to rotating pool");
                         }
+
+                        final File posterImageFile = getPosterImageFileFrom(newFile);
+                        if (!posterImageFile.exists()) {
+                            throw new RuntimeException("Expected the poster image file for " + newFile.getAbsolutePath() +
+                                                               " to be created, but it cannot be found");
+                        }
                     });
         }
     }
