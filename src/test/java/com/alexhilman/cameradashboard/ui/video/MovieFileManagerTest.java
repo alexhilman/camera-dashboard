@@ -73,14 +73,17 @@ public class MovieFileManagerTest {
         movieFileManager.addMoviesToRotatingPool(camera, mockFiles);
 
         final File rotatingDirectoryForCamera = movieFileManager.getRotatingDirectoryForCamera(camera);
-        assertThat(Lists.newArrayList(rotatingDirectoryForCamera.listFiles()), hasSize(5));
+        assertThat(
+                Lists.newArrayList(rotatingDirectoryForCamera.listFiles((dir, name) -> name.endsWith(".mp4"))),
+                hasSize(5)
+        );
     }
 
     @Test
     public void shouldGetCameraForMovie() {
         movieFileManager.addMoviesToRotatingPool(camera, mockFiles);
 
-        movieFileManager.getMoviesSince(Instant.EPOCH)
+        movieFileManager.getMoviesInRange(Instant.EPOCH, Instant.now())
                         .forEach(movie -> {
                             assertThat(movieFileManager.getCameraForMovie(movie), is(camera));
                         });

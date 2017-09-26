@@ -38,8 +38,9 @@ public class Movies implements View {
         movies.setContent(moviePosterContainer);
 
         moviePosterContainer.addComponents(
-                movieViewHelper.buildPostersFor(movieFileManager.getMoviesSince(midnightThisMorning().minus(7,
-                                                                                                            ChronoUnit.DAYS)))
+                movieViewHelper.buildPostersFor(
+                        movieFileManager.getMoviesInRange(midnightThisMorning().minus(7, ChronoUnit.DAYS),
+                                                          Instant.now()))
         );
 
         return movies;

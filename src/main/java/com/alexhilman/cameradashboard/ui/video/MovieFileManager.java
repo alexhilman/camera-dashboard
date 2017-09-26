@@ -239,7 +239,6 @@ public class MovieFileManager {
     }
 
     private List<Movie> listCameraMovies(final File rotatingDir) {
-
         final File[] rotatingCameraDirectories = rotatingDir.listFiles();
         if (rotatingCameraDirectories == null) {
             return Collections.emptyList();
@@ -296,7 +295,7 @@ public class MovieFileManager {
         assert directory != null;
         assert directory.exists();
 
-        final File[] files = directory.listFiles();
+        final File[] files = directory.listFiles((dir, name) -> !name.endsWith(".jpg"));
         if (files == null) {
             return Collections.emptyList();
         }
@@ -387,8 +386,12 @@ public class MovieFileManager {
         return storageDirectory.getTotalSpace();
     }
 
-    public List<Movie> getMoviesSince(final Instant instant) {
-        final String dateString = instant.atZone(ZoneId.systemDefault()).format(STORAGE_FILE_DATET_TIME_FORMAT);
+    public List<Movie> getMoviesInRange(final Instant from, final Instant to) {
+        checkNotNull(from, "from cannot be null");
+        checkNotNull(to, "to cannot be null");
+
+        final String fromDateString = from.atZone(ZoneId.systemDefault()).format(STORAGE_FILE_DATET_TIME_FORMAT);
+        final String toDateString = to.atZone(ZoneId.systemDefault()).format(STORAGE_FILE_DATET_TIME_FORMAT);
         return Stream.of(rotatingDirectory, savedDirectory)
                      .map(File::listFiles)
                      .flatMap(Arrays::stream)
@@ -396,8 +399,15 @@ public class MovieFileManager {
                          return Arrays.stream(rotatingCameraDirs.listFiles())
                                       .filter(file -> {
                                           return file.getName().endsWith(".mp4") &&
-                                                  dateString.compareTo(file.getName()
-                                                                           .substring(0, dateString.length())) <= 0;
+                                                  fromDateString.compareTo(file.getName()
+                                                                               .substring(0,
+                                                                                          fromDateString.length())) <= 0;
+                                      })
+                                      .filter(file -> {
+                                          return file.getName().endsWith(".mp4") &&
+                                                  toDateString.compareTo(file.getName()
+                                                                             .substring(0,
+                                                                                        toDateString.length())) >= 0;
                                       })
                                       .collect(toList());
                      })

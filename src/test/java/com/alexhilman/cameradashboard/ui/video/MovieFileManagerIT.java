@@ -236,8 +236,8 @@ public class MovieFileManagerIT {
                                               .findFirst()
                                               .get();
 
-        assertThat(movieFileManager.getMoviesSince(Instant.now()), is(empty()));
-        assertThat(movieFileManager.getMoviesSince(oldestInstant), hasSize(5));
+        assertThat(movieFileManager.getMoviesInRange(Instant.now(), Instant.now()), is(empty()));
+        assertThat(movieFileManager.getMoviesInRange(oldestInstant, Instant.now()), hasSize(5));
     }
 
     @Test
@@ -245,7 +245,7 @@ public class MovieFileManagerIT {
         final DcsFile file = Fixtures.randomDcsFile();
         movieFileManager.addMoviesToRotatingPool(camera, Lists.newArrayList(file));
 
-        final List<Movie> movies = movieFileManager.getMoviesSince(Instant.EPOCH);
+        final List<Movie> movies = movieFileManager.getMoviesInRange(Instant.EPOCH, Instant.now());
         assertThat(movies, hasSize(1));
 
         assertThat(movies.get(0).getPosterImageFile(), is(notNullValue()));
@@ -259,7 +259,7 @@ public class MovieFileManagerIT {
                                              .collect(toList());
 
         movieFileManager.addMoviesToRotatingPool(camera, files);
-        final List<Movie> allMovies = movieFileManager.getMoviesSince(Instant.EPOCH);
+        final List<Movie> allMovies = movieFileManager.getMoviesInRange(Instant.EPOCH, Instant.now());
         movieFileManager.moveRotatingPoolVideoToSavedPool(allMovies.get(0));
 
         final Optional<Movie> optionallySavedMovie = movieFileManager.findMovie(camera, allMovies.get(0).getName());

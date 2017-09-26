@@ -2,7 +2,6 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.view.ClassNavigator;
 import com.alexhilman.cameradashboard.ui.view.WatchMovie;
-import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.vaadin.server.ExternalResource;
@@ -19,13 +18,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import static com.google.common.base.Preconditions.checkNotNull;
-import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -65,59 +61,40 @@ public class MovieViewHelper {
         checkNotNull(movies, "movies cannot be null");
 
         return movies.stream()
-                     .collect(groupingBy(movie -> {
-                         return movie.getDateTime().toLocalDate();
-                     }))
-                     .entrySet()
-                     .stream()
-                     .sorted(Comparator.comparing(Map.Entry::getKey))
-                     .map(movieEntry -> {
-                         final LocalDate movieDate = movieEntry.getKey();
-                         final List<Component> dateComponents =
-                                 Lists.newArrayListWithCapacity(movieEntry.getValue().size() + 1);
-                         dateComponents.add(dateSeparatorComponentFor(movieDate));
+                     .sorted((m1, m2) -> m2.getName().compareTo(m1.getName()))
+                     .map(movie -> {
+                         final VerticalLayout posterLayout = new VerticalLayout();
+                         posterLayout.setMargin(false);
+                         posterLayout.setSpacing(true);
+                         posterLayout.setSizeFull();
+                         final Image image = new Image(null, posterResourceFor(movie));
+                         image.setSizeFull();
+                         image.addClickListener(event -> {
+                             ClassNavigator.navigateTo(WatchMovie.class, movieContextPathFor(movie));
+                         });
+                         posterLayout.addComponent(image);
 
-                         dateComponents.addAll(
-                                 movieEntry.getValue()
-                                           .stream()
-                                           .sorted((m1, m2) -> m2.getName().compareTo(m1.getName()))
-                                           .map(movie -> {
-                                               final HorizontalLayout posterLayout = new HorizontalLayout();
-                                               final Image image =
-                                                       new Image(null,
-                                                                 posterResourceFor(movie));
-
-                                               image.setWidth(20, Sizeable.Unit.EM);
-                                               image.addClickListener(event -> {
-                                                   ClassNavigator.navigateTo(
-                                                           WatchMovie.class,
-                                                           movieContextPathFor(movie));
-                                               });
-                                               posterLayout.addComponent(image);
-
-                                               final GridLayout movieDetails = new GridLayout(2, 3);
-                                               posterLayout.addComponents(movieDetails);
-                                               final LocalDateTime movieDateTime = movie.getDateTime();
-                                               movieDetails.addComponents(new Label("Date: "),
-                                                                          new Label(movieDateTime.toLocalDate()
-                                                                                                 .format(DATE_FORMATTER)));
-                                               movieDetails.addComponents(new Label("Time: "),
-                                                                          new Label(movieDateTime.toLocalTime()
-                                                                                                 .format(TIME_FORMATTER)));
-                                               final Duration runningTime = movieHelper.runningLengthFor(movie);
-                                               movieDetails.addComponents(new Label("Length:&nbsp;",
-                                                                                    ContentMode.HTML),
-                                                                          new Label(runningTime.toMinutes() + ":" +
-                                                                                            runningTime.minus(
-                                                                                                    runningTime.toMinutes(),
-                                                                                                    ChronoUnit.MINUTES)
-                                                                                                       .getSeconds()));
-                                               return posterLayout;
-                                           })
-                                           .collect(toList()));
-                         return dateComponents;
+                         final GridLayout movieDetails = new GridLayout(2, 3);
+                         movieDetails.setMargin(false);
+                         movieDetails.setSpacing(false);
+                         posterLayout.addComponents(movieDetails);
+                         final LocalDateTime movieDateTime = movie.getDateTime();
+                         movieDetails.addComponents(new Label("Date: "),
+                                                    new Label(movieDateTime.toLocalDate()
+                                                                           .format(DATE_FORMATTER)));
+                         movieDetails.addComponents(new Label("Time: "),
+                                                    new Label(movieDateTime.toLocalTime()
+                                                                           .format(TIME_FORMATTER)));
+                         final Duration runningTime = movieHelper.runningLengthFor(movie);
+                         movieDetails.addComponents(new Label("Length:&nbsp;",
+                                                              ContentMode.HTML),
+                                                    new Label(runningTime.toMinutes() + ":" +
+                                                                      runningTime.minus(
+                                                                              runningTime.toMinutes(),
+                                                                              ChronoUnit.MINUTES)
+                                                                                 .getSeconds()));
+                         return posterLayout;
                      })
-                     .flatMap(List::stream)
                      .collect(toList())
                      .toArray(new Component[movies.size()]);
     }

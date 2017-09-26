@@ -9,10 +9,11 @@ import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
 import com.vaadin.server.Sizeable;
 import com.vaadin.ui.*;
+import io.reactivex.Flowable;
+import io.reactivex.schedulers.Schedulers;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.File;
 import java.time.Instant;
 import java.time.ZoneId;
 
@@ -63,16 +64,39 @@ public class Dashboard implements View {
                                        " used out of " + humanReadableByteCount(totalSpace) +
                                        " (" + humanReadableByteCount(usableSpace) + " free)");
 
-        final HorizontalLayout moviePreviewTiles = new HorizontalLayout();
-        todayMovies.setContent(moviePreviewTiles);
-        moviePreviewTiles.addComponents(
-                movieViewHelper.buildPostersFor(movieFileManager.getMoviesSince(midnightThisMorning())));
+        todayMovies.setContent(buildLoadingSpinner());
+
+        final UI ui = UI.getCurrent();
+
+        Flowable.fromCallable(() -> movieFileManager.getMoviesInRange(midnightThisMorning(), Instant.now()))
+                .map(movieViewHelper::buildPostersFor)
+                .subscribeOn(Schedulers.computation())
+                .subscribe(components -> {
+                    ui.access(() -> {
+                        final int columns = 3;
+                        final int rows = components.length / columns + (components.length % columns > 0 ? 1 : 0);
+                        final GridLayout content = new GridLayout(columns, rows, components);
+                        content.setSpacing(true);
+                        content.setMargin(true);
+                        content.setWidth(100, Sizeable.Unit.PERCENTAGE);
+                        todayMovies.setContent(content);
+
+                        ui.push();
+                    });
+                });
     }
 
-    private String contextResourceNameFor(final File file) {
-        final String absolutePath = movieFileManager.getStorageDirectory().getAbsolutePath();
-        final String substring = file.getAbsolutePath().substring(absolutePath.length() + 1);
-        return substring;
+    private Component buildLoadingSpinner() {
+        final HorizontalLayout layout = new HorizontalLayout();
+        layout.setSizeFull();
+
+        final ProgressBar progressBar = new ProgressBar();
+        progressBar.setIndeterminate(true);
+
+        layout.addComponentsAndExpand(progressBar);
+        layout.setComponentAlignment(progressBar, Alignment.MIDDLE_CENTER);
+
+        return layout;
     }
 
     public static String humanReadableByteCount(long bytes) {
