@@ -10,6 +10,11 @@
     <name>camera-dashboard</name>
     <url>http://maven.apache.org</url>
 
+    <scm>
+        <connection>scm:git:https://github.com/alexhilman/camera-dashboard.git</connection>
+        <developerConnection>scm:git:https://github.com/alexhilman/camera-dashboard.git</developerConnection>
+    </scm>
+
     <properties>
         <vaadin.version>8.1.0</vaadin.version>
         <vaadin.plugin.version>8.1.0</vaadin.plugin.version>
