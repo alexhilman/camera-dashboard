@@ -51,8 +51,10 @@ public class MyVaadinUI extends UI {
         @Override
         protected boolean isAllowedVAADINResourceUrl(HttpServletRequest request, URL resourceUrl) {
             if ("jar".equals(resourceUrl.getProtocol())) {
-                if (!resourceUrl.getPath().contains("!/VAADIN/")) {
-                    getLogger().warn("Blocked attempt to access a JAR entry not starting with /VAADIN/: " + resourceUrl);
+                if (!resourceUrl.getPath().contains("!/VAADIN/") &&
+                        !resourceUrl.getPath().contains("!/webapp/VAADIN/")) {
+                    getLogger().warn("Blocked attempt to access a JAR entry not starting with " +
+                                             "/VAADIN/ or /webapp/VAADIN: " + resourceUrl);
                     return false;
                 }
                 getLogger().debug("Accepted access to a JAR entry using a class loader: " + resourceUrl);
