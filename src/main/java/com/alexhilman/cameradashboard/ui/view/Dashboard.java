@@ -75,14 +75,17 @@ public class Dashboard implements View {
                 .subscribeOn(Schedulers.computation())
                 .subscribe(components -> {
                     ui.access(() -> {
-                        final int columns = 3;
-                        final int rows = components.length / columns + (components.length % columns > 0 ? 1 : 0);
-                        final GridLayout content = new GridLayout(columns, rows, components);
-                        content.setSpacing(true);
-                        content.setMargin(true);
-                        content.setWidth(100, Sizeable.Unit.PERCENTAGE);
-                        todayMovies.setContent(content);
-
+                        if (components.length == 0) {
+                            todayMovies.setContent(new Label("No videos for this day"));
+                        } else {
+                            final int columns = 3;
+                            final int rows = components.length / columns + (components.length % columns > 0 ? 1 : 0);
+                            final GridLayout content = new GridLayout(columns, rows, components);
+                            content.setSpacing(true);
+                            content.setMargin(true);
+                            content.setWidth(100, Sizeable.Unit.PERCENTAGE);
+                            todayMovies.setContent(content);
+                        }
                         ui.push();
                     });
                 });
