@@ -81,7 +81,7 @@ public class App {
             server.start();
 //            System.out.println(server.dump());
 
-            System.out.println("Jetty started, please go to http://localhost:" + PORT + "/");
+            System.out.println("Jetty started, please go to http://localhost:" + PORT + "/ui");
             server.join();
         } catch (final Exception e) {
             e.printStackTrace();
