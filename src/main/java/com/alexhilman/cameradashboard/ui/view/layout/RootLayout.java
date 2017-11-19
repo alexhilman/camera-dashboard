@@ -1,9 +1,6 @@
 package com.alexhilman.cameradashboard.ui.view.layout;
 
-import com.alexhilman.cameradashboard.ui.view.ClassNavigator;
-import com.alexhilman.cameradashboard.ui.view.Dashboard;
-import com.alexhilman.cameradashboard.ui.view.Movies;
-import com.alexhilman.cameradashboard.ui.view.ViewContainer;
+import com.alexhilman.cameradashboard.ui.view.*;
 import com.google.inject.Inject;
 import com.vaadin.guice.annotation.UIScope;
 import com.vaadin.icons.VaadinIcons;
@@ -39,10 +36,10 @@ public class RootLayout extends HorizontalLayout {
         homeButton.addStyleNames(ValoTheme.BUTTON_HUGE, "circle-button");
         actions.addComponent(homeButton);
 
-//        final Button camerasButton = new Button(VaadinIcons.MOVIE);
-//        camerasButton.addClickListener(event -> ClassNavigator.navigateTo(Cameras.class));
-//        camerasButton.addStyleNames(ValoTheme.BUTTON_HUGE, "circle-button");
-//        actions.addComponent(camerasButton);
+        final Button camerasButton = new Button(VaadinIcons.MOVIE);
+        camerasButton.addClickListener(event -> ClassNavigator.navigateTo(Cameras.class));
+        camerasButton.addStyleNames(ValoTheme.BUTTON_HUGE, "circle-button");
+        actions.addComponent(camerasButton);
 
         final Button moviesButton = new Button(VaadinIcons.FILM);
         moviesButton.addClickListener(event -> ClassNavigator.navigateTo(Movies.class));
