@@ -4,7 +4,6 @@ import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
@@ -22,7 +21,6 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 
 public class MovieFileManagerTest {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private MovieFileManager movieFileManager;
     private Camera camera;
     private List<DcsFile> mockFiles;

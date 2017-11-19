@@ -1,7 +1,6 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,7 +16,6 @@ import static org.hamcrest.Matchers.hasSize;
 
 @Ignore
 public class CameraMovieWatcherIT {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
     private MovieFileManager movieFileManager;
     private CameraMovieWatcher cameraMovieWatcher;
 
