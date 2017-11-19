@@ -7,10 +7,8 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 
@@ -31,24 +29,5 @@ public class StreamingDriverIT {
     @Test
     public void shouldSortMoviesWithMotion() throws MalformedURLException {
         streamingDriver.start();
-    }
-
-    private void recursivelyDelete(final File file) {
-        if (!file.exists()) {
-            return;
-        }
-        final File[] files = file.listFiles();
-        if (files == null) {
-            if (!file.delete()) {
-                throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
-            }
-            return;
-        }
-
-        Arrays.stream(files)
-              .forEach(this::recursivelyDelete);
-        if (!file.delete()) {
-            throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
-        }
     }
 }
