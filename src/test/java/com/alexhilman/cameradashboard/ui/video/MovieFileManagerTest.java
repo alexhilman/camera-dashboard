@@ -11,12 +11,12 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -87,18 +87,5 @@ public class MovieFileManagerTest {
                         .forEach(movie -> {
                             assertThat(movieFileManager.getCameraForMovie(movie), is(camera));
                         });
-    }
-
-    private CameraConfiguration readCameraConfig() {
-        final CameraConfiguration cameraConfiguration;
-        try {
-            cameraConfiguration =
-                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
-                                            CameraConfiguration.class);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        return cameraConfiguration;
     }
 }

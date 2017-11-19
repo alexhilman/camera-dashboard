@@ -1,7 +1,6 @@
 package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
-import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
@@ -9,10 +8,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
@@ -25,16 +24,8 @@ public class CameraMovieWatcherIT {
     @Before
     public void setup() {
         movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.cameradashboard");
-        final CameraConfiguration cameraConfiguration;
-        try {
-            cameraConfiguration =
-                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
-                                            CameraConfiguration.class);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
 
-        cameraMovieWatcher = new CameraMovieWatcher(cameraConfiguration, movieFileManager);
+        cameraMovieWatcher = new CameraMovieWatcher(readCameraConfig(), movieFileManager);
     }
 
     @After
@@ -63,18 +54,5 @@ public class CameraMovieWatcherIT {
         final List<Camera> cameras = cameraMovieWatcher.getCameras();
 
         assertThat(cameras, hasSize(1));
-    }
-
-    private CameraConfiguration readCameraConfig() {
-        final CameraConfiguration cameraConfiguration;
-        try {
-            cameraConfiguration =
-                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
-                                            CameraConfiguration.class);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        return cameraConfiguration;
     }
 }

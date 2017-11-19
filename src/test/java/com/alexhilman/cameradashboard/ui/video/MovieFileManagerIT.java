@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.*;
 import java.util.stream.IntStream;
 
+import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.movieFileNameFor;
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.stream.Collectors.toList;
@@ -270,18 +271,5 @@ public class MovieFileManagerIT {
         assertThat(savedMovie.getMovieFile().getParentFile().getParentFile().getName(), is("saved"));
 
         assertThat(movieFileManager.findMovie(camera, allMovies.get(4).getName()).get(), is(allMovies.get(4)));
-    }
-
-    private CameraConfiguration readCameraConfig() {
-        final CameraConfiguration cameraConfiguration;
-        try {
-            cameraConfiguration =
-                    OBJECT_MAPPER.readValue(getClass().getResource("/com/alexhilman/cameradashboard/ui/cameras.json"),
-                                            CameraConfiguration.class);
-        } catch (IOException e) {
-            throw new IllegalStateException(e);
-        }
-
-        return cameraConfiguration;
     }
 }
