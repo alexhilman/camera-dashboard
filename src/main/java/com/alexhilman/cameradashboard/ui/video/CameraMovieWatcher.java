@@ -47,7 +47,7 @@ public class CameraMovieWatcher {
                     executorService.scheduleWithFixedDelay(
                             () -> {
                                 try {
-                                    downloadNewFiles();
+                                    watchCameras();
                                 } catch (Exception e) {
                                     LOG.error("Could not fully iterate through new files", e);
                                 }
@@ -84,7 +84,7 @@ public class CameraMovieWatcher {
         }
     }
 
-    public void downloadNewFiles() {
+    public void watchCameras() {
         cameraConfiguration.getCameras().forEach(camera -> {
             LOG.info("Looking for new files in {} at {}", camera.getName(), camera.getNetworkAddress());
 

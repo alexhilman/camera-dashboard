@@ -57,7 +57,7 @@ public class CameraMovieWatcherTest {
         when(movieFileManager.lastMovieInstantFor(any())).thenReturn(Instant.EPOCH);
         when(driver.findNewMoviesSince(any())).thenReturn(Flowable.empty());
 
-        cameraMovieWatcher.downloadNewFiles();
+        cameraMovieWatcher.watchCameras();
 
         verify(driver, times(1)).findNewMoviesSince(Instant.EPOCH);
     }
@@ -75,7 +75,7 @@ public class CameraMovieWatcherTest {
                 Flowable.just(expectedFile)
         );
 
-        cameraMovieWatcher.downloadNewFiles();
+        cameraMovieWatcher.watchCameras();
 
         verify(movieFileManager, times(1))
                 .addMoviesToRotatingPool(eq(cameraConfiguration.getCameras().get(0)),
