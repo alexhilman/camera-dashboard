@@ -1,10 +1,10 @@
 package com.alexhilman.cameradashboard.ui;
 
 import com.alexhilman.cameradashboard.ui.inject.CameraDashboardInitializer;
-import com.alexhilman.cameradashboard.ui.layout.RootLayout;
 import com.alexhilman.cameradashboard.ui.video.CameraMovieWatcher;
 import com.alexhilman.cameradashboard.ui.view.ErrorView;
 import com.alexhilman.cameradashboard.ui.view.ViewContainer;
+import com.alexhilman.cameradashboard.ui.view.layout.RootLayout;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.vaadin.annotations.Push;

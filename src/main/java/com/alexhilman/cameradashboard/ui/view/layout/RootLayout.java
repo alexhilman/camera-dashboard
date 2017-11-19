@@ -1,4 +1,4 @@
-package com.alexhilman.cameradashboard.ui.layout;
+package com.alexhilman.cameradashboard.ui.view.layout;
 
 import com.alexhilman.cameradashboard.ui.view.ClassNavigator;
 import com.alexhilman.cameradashboard.ui.view.Dashboard;
