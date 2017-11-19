@@ -37,13 +37,15 @@ public class StreamingDriver {
     private final String username;
     private final String password;
 
+    private volatile InputStream cameraStream;
+
     public StreamingDriver(final URL streamingUrl, final String username, final String password) {
         this.streamingUrl = checkNotNull(streamingUrl, "streamingUrl cannot be null");
         this.username = username;
         this.password = password;
     }
 
-    public void start() {
+    public void processStream() throws Exception {
         try (final InputStream inputStream = openStreamToCamera();
              final FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(inputStream)) {
             grabber.start();
@@ -83,8 +85,6 @@ public class StreamingDriver {
                     }
                 }
             }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -97,6 +97,7 @@ public class StreamingDriver {
         }
 
         LOG.info("Opening stream to camera");
-        return connection.getInputStream();
+        cameraStream = connection.getInputStream();
+        return cameraStream;
     }
 }

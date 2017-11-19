@@ -2,18 +2,20 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.Dcs936Client;
+import com.alexhilman.cameradashboard.ui.driver.StreamingDriver;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.time.Instant;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -25,7 +27,8 @@ public class CameraWatcher {
 
     private final CameraConfiguration cameraConfiguration;
     private final MovieFileManager movieFileManager;
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ExecutorService executorService = Executors.newCachedThreadPool();
+    private final ConcurrentMap<Camera, StreamingDriver> streamingDriversByCamera = new ConcurrentHashMap<>();
     private volatile boolean running;
 
     @Inject
@@ -41,45 +44,38 @@ public class CameraWatcher {
             synchronized (this) {
                 running = this.running;
                 if (!running) {
-                    executorService.scheduleWithFixedDelay(
-                            () -> {
+                    getCameras().forEach(camera -> {
+                        executorService.submit(() -> {
+                            final StreamingDriver streamingDriver;
+                            try {
+                                streamingDriver =
+                                        new StreamingDriver(new URL(camera.getNetworkAddress()),
+                                                            camera.getUsername(),
+                                                            camera.getPassword());
+                            } catch (MalformedURLException e) {
+                                throw new RuntimeException("Invalid configuration for " + camera.getName(), e);
+                            }
+
+                            streamingDriversByCamera.put(camera, streamingDriver);
+
+                            final Thread currentThread = Thread.currentThread();
+                            while (!currentThread.isInterrupted()) {
                                 try {
-                                    watchCameras();
+                                    streamingDriver.processStream();
                                 } catch (Exception e) {
-                                    LOG.error("Could not fully iterate through new files", e);
+                                    LOG.error("Encountered error while processing camera video stream", e);
                                 }
-                            },
-                            0,
-                            5,
-                            TimeUnit.SECONDS
-                    );
+                            }
+                        });
+                    });
+                    running = this.running = true;
                 }
-                running = true;
             }
         }
     }
 
     List<Camera> getCameras() {
         return cameraConfiguration.getCameras();
-    }
-
-    Dcs936Client driverFor(final Camera camera) {
-        throw new UnsupportedOperationException("Implementation changing");
-    }
-
-    public void watchCameras() {
-        cameraConfiguration.getCameras().forEach(camera -> {
-            LOG.info("Looking for new files in {} at {}", camera.getName(), camera.getNetworkAddress());
-
-            final Dcs936Client dcs936Client = driverFor(camera);
-
-            final Instant lastInstant = movieFileManager.lastMovieInstantFor(camera);
-            movieFileManager.addMoviesToRotatingPool(
-                    camera,
-                    dcs936Client.findNewMoviesSince(lastInstant)
-                                .toList()
-                                .blockingGet());
-        });
     }
 
     private String extensionForFile(final DcsFile file) {

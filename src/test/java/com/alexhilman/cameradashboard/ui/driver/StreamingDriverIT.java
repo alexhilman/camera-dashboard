@@ -27,7 +27,7 @@ public class StreamingDriverIT {
 
     @Ignore("Could identify myself; not committing video")
     @Test
-    public void shouldSortMoviesWithMotion() throws MalformedURLException {
-        streamingDriver.start();
+    public void shouldSortMoviesWithMotion() throws Exception {
+        streamingDriver.processStream();
     }
 }
