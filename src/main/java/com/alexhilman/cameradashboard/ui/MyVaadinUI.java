@@ -1,7 +1,7 @@
 package com.alexhilman.cameradashboard.ui;
 
 import com.alexhilman.cameradashboard.ui.inject.CameraDashboardInitializer;
-import com.alexhilman.cameradashboard.ui.video.CameraMovieWatcher;
+import com.alexhilman.cameradashboard.ui.video.CameraWatcher;
 import com.alexhilman.cameradashboard.ui.view.ErrorView;
 import com.alexhilman.cameradashboard.ui.view.ViewContainer;
 import com.alexhilman.cameradashboard.ui.view.layout.RootLayout;
@@ -94,7 +94,7 @@ public class MyVaadinUI extends UI {
                 throw new IllegalStateException("Cannot get the injector");
             }
 
-            injector.getInstance(CameraMovieWatcher.class).start();
+            injector.getInstance(CameraWatcher.class).start();
         }
     }
 }

@@ -20,8 +20,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  */
 @Singleton
-public class CameraMovieWatcher {
-    private static final Logger LOG = LogManager.getLogger(CameraMovieWatcher.class);
+public class CameraWatcher {
+    private static final Logger LOG = LogManager.getLogger(CameraWatcher.class);
 
     private final CameraConfiguration cameraConfiguration;
     private final MovieFileManager movieFileManager;
@@ -29,8 +29,8 @@ public class CameraMovieWatcher {
     private volatile boolean running;
 
     @Inject
-    public CameraMovieWatcher(final CameraConfiguration cameraConfiguration,
-                              final MovieFileManager movieFileManager) {
+    public CameraWatcher(final CameraConfiguration cameraConfiguration,
+                         final MovieFileManager movieFileManager) {
         this.cameraConfiguration = checkNotNull(cameraConfiguration, "cameraConfiguration cannot be null");
         this.movieFileManager = movieFileManager;
     }

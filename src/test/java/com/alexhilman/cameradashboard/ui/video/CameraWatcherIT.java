@@ -15,15 +15,15 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasSize;
 
 @Ignore
-public class CameraMovieWatcherIT {
+public class CameraWatcherIT {
     private MovieFileManager movieFileManager;
-    private CameraMovieWatcher cameraMovieWatcher;
+    private CameraWatcher cameraWatcher;
 
     @Before
     public void setup() {
         movieFileManager = new MovieFileManager(readCameraConfig(), new MovieHelper(), "/tmp/.cameradashboard");
 
-        cameraMovieWatcher = new CameraMovieWatcher(readCameraConfig(), movieFileManager);
+        cameraWatcher = new CameraWatcher(readCameraConfig(), movieFileManager);
     }
 
     @After
@@ -49,7 +49,7 @@ public class CameraMovieWatcherIT {
 
     @Test
     public void shouldGetCameras() {
-        final List<Camera> cameras = cameraMovieWatcher.getCameras();
+        final List<Camera> cameras = cameraWatcher.getCameras();
 
         assertThat(cameras, hasSize(1));
     }

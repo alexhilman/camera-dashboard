@@ -18,8 +18,8 @@ import java.time.temporal.ChronoUnit;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
-public class CameraMovieWatcherTest {
-    private CameraMovieWatcher cameraMovieWatcher;
+public class CameraWatcherTest {
+    private CameraWatcher cameraWatcher;
     private CameraConfiguration cameraConfiguration;
     private MovieFileManager movieFileManager;
     private Dcs936Client driver;
@@ -38,7 +38,7 @@ public class CameraMovieWatcherTest {
 
         movieFileManager = mock(MovieFileManager.class);
         driver = mock(Dcs936Client.class);
-        cameraMovieWatcher = new CameraMovieWatcher(cameraConfiguration, movieFileManager) {
+        cameraWatcher = new CameraWatcher(cameraConfiguration, movieFileManager) {
             @Override
             Dcs936Client driverFor(final Camera camera) {
                 return driver;
@@ -51,7 +51,7 @@ public class CameraMovieWatcherTest {
         when(movieFileManager.lastMovieInstantFor(any())).thenReturn(Instant.EPOCH);
         when(driver.findNewMoviesSince(any())).thenReturn(Flowable.empty());
 
-        cameraMovieWatcher.watchCameras();
+        cameraWatcher.watchCameras();
 
         verify(driver, times(1)).findNewMoviesSince(Instant.EPOCH);
     }
@@ -69,7 +69,7 @@ public class CameraMovieWatcherTest {
                 Flowable.just(expectedFile)
         );
 
-        cameraMovieWatcher.watchCameras();
+        cameraWatcher.watchCameras();
 
         verify(movieFileManager, times(1))
                 .addMoviesToRotatingPool(eq(cameraConfiguration.getCameras().get(0)),
