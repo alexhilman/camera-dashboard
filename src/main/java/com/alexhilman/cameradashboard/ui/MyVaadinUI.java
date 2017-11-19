@@ -76,7 +76,7 @@ public class MyVaadinUI extends UI {
                     getLogger().info("Blocked attempt to access file: " + resourceUrl);
                     return false;
                 }
-                getLogger().info("Accepted access to a file using a class loader: " + resourceUrl);
+                getLogger().trace("Accepted access to a file using a class loader: " + resourceUrl);
                 return true;
             }
         }
