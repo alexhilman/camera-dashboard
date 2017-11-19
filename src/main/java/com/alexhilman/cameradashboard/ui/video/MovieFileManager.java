@@ -2,8 +2,6 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.cameradashboard.ui.conf.Driver;
-import com.alexhilman.cameradashboard.ui.conf.Type;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.alexhilman.dlink.helper.IOStreams;
 import com.google.common.collect.Lists;
@@ -258,7 +256,7 @@ public class MovieFileManager {
         if (!posterImageFile.exists()) {
             try (final FileOutputStream out = new FileOutputStream(posterImageFile)) {
                 out.write(movieHelper.grabJpgFrame(movieFile,
-                                                   getCameraForMovie(movieFile).getFrameGrabDelayMillis()));
+                                                   3000));
             } catch (Exception e) {
                 throw new RuntimeException("Could not grab poster image from movie: " + movieFile.getAbsolutePath(), e);
             }
@@ -279,14 +277,10 @@ public class MovieFileManager {
             LOG.info(
                     "No camera configuration found for {}; using a dummy configuration instead",
                     cameraName);
-            return new Camera("dummy",
-                              "dummy",
-                              cameraName,
+            return new Camera(cameraName,
                               "http://localhost",
                               "admin",
-                              "password",
-                              3000,
-                              new Driver(Type.dummy, "Dummy"));
+                              "password");
         }
         return camera.get();
     }

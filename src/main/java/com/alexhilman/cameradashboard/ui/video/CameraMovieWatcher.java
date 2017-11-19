@@ -2,7 +2,6 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.AccessCredentials;
 import com.alexhilman.dlink.dcs936.Dcs936Client;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.inject.Inject;
@@ -10,8 +9,6 @@ import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -67,21 +64,7 @@ public class CameraMovieWatcher {
     }
 
     Dcs936Client driverFor(final Camera camera) {
-        if (!camera.getDriver().getImplementation().equals(Dcs936Client.class.getName())) {
-            throw new IllegalArgumentException("Camera driver not supported: " + camera.getDriver()
-                                                                                       .getImplementation());
-        }
-
-        try {
-            return new Dcs936Client(
-                    new AccessCredentials(camera.getUsername(),
-                                          camera.getPassword(),
-                                          new URL(camera.getNetworkAddress())
-                    )
-            );
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Malformed URL for camera: " + camera.getNetworkAddress(), e);
-        }
+        throw new UnsupportedOperationException("Implementation changing");
     }
 
     public void watchCameras() {

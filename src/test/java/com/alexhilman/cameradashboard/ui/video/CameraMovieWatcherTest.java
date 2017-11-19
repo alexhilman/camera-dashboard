@@ -3,8 +3,6 @@ package com.alexhilman.cameradashboard.ui.video;
 import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.cameradashboard.ui.conf.Driver;
-import com.alexhilman.cameradashboard.ui.conf.Type;
 import com.alexhilman.dlink.dcs936.Dcs936Client;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.common.collect.Lists;
@@ -31,14 +29,10 @@ public class CameraMovieWatcherTest {
         cameraConfiguration = mock(CameraConfiguration.class);
         when(cameraConfiguration.getCameras()).thenReturn(
                 Lists.newArrayList(
-                        new Camera("dlink",
-                                   "DCS-936L",
-                                   "dummy",
+                        new Camera("dummy",
                                    "http://localhost:8080",
                                    "user",
-                                   "pass",
-                                   3000,
-                                   new Driver(Type.browser, Dcs936Client.class.getName()))
+                                   "pass")
                 )
         );
 
