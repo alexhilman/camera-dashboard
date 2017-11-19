@@ -7,7 +7,7 @@ import com.vaadin.ui.Label;
 
 /**
  */
-@GuiceView("secondary")
+@GuiceView("cameras")
 public class Cameras implements View {
     @Override
     public Component getViewComponent() {
