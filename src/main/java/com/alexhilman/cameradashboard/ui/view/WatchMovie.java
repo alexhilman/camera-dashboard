@@ -10,7 +10,6 @@ import com.google.inject.Inject;
 import com.vaadin.guice.annotation.GuiceView;
 import com.vaadin.navigator.View;
 import com.vaadin.navigator.ViewChangeListener;
-import com.vaadin.server.Sizeable;
 import com.vaadin.ui.*;
 import com.vaadin.ui.themes.ValoTheme;
 
@@ -51,8 +50,6 @@ public class WatchMovie implements View {
         layout.setSizeFull();
 
         video = new Video();
-        video.setWidth(90, Sizeable.Unit.PERCENTAGE);
-        video.setSizeFull();
         layout.addComponentsAndExpand(video);
 
         return container;
