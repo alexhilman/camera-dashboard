@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -74,11 +75,17 @@ public class CameraWatcher {
         }
     }
 
-    List<Camera> getCameras() {
+    public List<Camera> getCameras() {
         return cameraConfiguration.getCameras();
     }
 
     private String extensionForFile(final DcsFile file) {
         return file.getFileName().substring(file.getFileName().lastIndexOf('.') + 1);
+    }
+
+    public InputStream observe(final Camera camera) {
+        LOG.info("Observing {}", camera.getName());
+
+        return streamingDriversByCamera.get(camera).observeStream();
     }
 }

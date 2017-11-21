@@ -25,19 +25,18 @@ import static org.bytedeco.javacpp.opencv_core.cvCountNonZero;
  */
 public class StreamingDriver {
     private static final Logger LOG = LogManager.getLogger(StreamingDriver.class);
+    private static final DecimalFormat decimalFormat = new DecimalFormat("000.0000");
+    private static final NumberFormat intFormat = new DecimalFormat("000,000");
 
     static {
         Loader.load(opencv_objdetect.class); // documented hack :\ <barf/>
     }
 
-    private static final DecimalFormat decimalFormat = new DecimalFormat("000.0000");
-    private static final NumberFormat intFormat = new DecimalFormat("000,000");
-
     private final URL streamingUrl;
     private final String username;
     private final String password;
 
-    private volatile InputStream cameraStream;
+    private volatile ObservableInputStream cameraStream;
 
     public StreamingDriver(final URL streamingUrl, final String username, final String password) {
         this.streamingUrl = checkNotNull(streamingUrl, "streamingUrl cannot be null");
@@ -97,7 +96,19 @@ public class StreamingDriver {
         }
 
         LOG.info("Opening stream to camera");
-        cameraStream = connection.getInputStream();
+        cameraStream = new ObservableInputStream(connection.getInputStream());
         return cameraStream;
+    }
+
+    public InputStream observeStream() {
+        final ObservableInputStream cameraStream = this.cameraStream;
+        if (cameraStream == null) {
+            throw new RuntimeException("Camera stream is not operational");
+        }
+        try {
+            return cameraStream.newObserver();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot spawn observer", e);
+        }
     }
 }
