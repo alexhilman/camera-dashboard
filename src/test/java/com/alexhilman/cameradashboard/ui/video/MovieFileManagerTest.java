@@ -3,7 +3,6 @@ package com.alexhilman.cameradashboard.ui.video;
 import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
@@ -18,12 +17,15 @@ import java.util.stream.IntStream;
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class MovieFileManagerTest {
     private MovieFileManager movieFileManager;
     private Camera camera;
-    private List<DcsFile> mockFiles;
+    private List<File> mockFiles;
 
     @Before
     public void setup() {
@@ -33,7 +35,7 @@ public class MovieFileManagerTest {
         camera = cameraConfiguration.getCameras().get(0);
 
         mockFiles = IntStream.range(0, 5)
-                             .mapToObj(i -> Fixtures.randomDcsFile())
+                             .mapToObj(i -> Fixtures.randomFile())
                              .collect(toList());
     }
 

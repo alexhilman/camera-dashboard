@@ -3,16 +3,23 @@ package com.alexhilman.cameradashboard.ui.video;
 import com.alexhilman.cameradashboard.ui.Fixtures;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.common.collect.Lists;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
@@ -20,7 +27,11 @@ import static com.alexhilman.cameradashboard.ui.video.MovieFileManager.movieFile
 import static java.time.temporal.ChronoUnit.DAYS;
 import static java.util.stream.Collectors.toList;
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.notNullValue;
 
 public class MovieFileManagerIT {
     private MovieFileManager movieFileManager;
@@ -36,22 +47,7 @@ public class MovieFileManagerIT {
     @After
     public void tearDown() {
         recurseDelete(movieFileManager.getStorageDirectory());
-    }
-
-    private void recurseDelete(final File file) {
-        final File[] files = file.listFiles();
-        if (files == null) {
-            if (!file.delete()) {
-                throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
-            }
-            return;
-        }
-
-        Arrays.stream(files)
-              .forEach(this::recurseDelete);
-        if (!file.delete()) {
-            throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
-        }
+        recurseDelete(Fixtures.tmpFolder());
     }
 
     @Test
@@ -73,8 +69,8 @@ public class MovieFileManagerIT {
         cam1.mkdirs();
         cam2.mkdirs();
 
-        final File cam1Movie = Fixtures.randomRealMovieFile();
-        final File cam2Movie = Fixtures.randomRealMovieFile();
+        final File cam1Movie = Fixtures.emptyFile();
+        final File cam2Movie = Fixtures.emptyFile();
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
@@ -99,8 +95,8 @@ public class MovieFileManagerIT {
         cam1.mkdirs();
         cam2.mkdirs();
 
-        final File cam1Movie = Fixtures.randomRealMovieFile();
-        final File cam2Movie = Fixtures.randomRealMovieFile();
+        final File cam1Movie = Fixtures.emptyFile();
+        final File cam2Movie = Fixtures.emptyFile();
         cam1Movie.createNewFile();
         cam2Movie.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie, cam2Movie);
@@ -125,8 +121,8 @@ public class MovieFileManagerIT {
         cam1Saved.mkdirs();
         cam2Saved.mkdirs();
 
-        final File cam1Movie1 = Fixtures.randomRealMovieFile();
-        final File cam2Movie1 = Fixtures.randomRealMovieFile();
+        final File cam1Movie1 = Fixtures.emptyFile();
+        final File cam2Movie1 = Fixtures.emptyFile();
         cam1Movie1.createNewFile();
         cam2Movie1.createNewFile();
 
@@ -138,8 +134,8 @@ public class MovieFileManagerIT {
         cam1Rotating.mkdirs();
         cam2Rotating.mkdirs();
 
-        final File cam1Movie2 = Fixtures.randomRealMovieFile();
-        final File cam2Movie2 = Fixtures.randomRealMovieFile();
+        final File cam1Movie2 = Fixtures.emptyFile();
+        final File cam2Movie2 = Fixtures.emptyFile();
         cam1Movie2.createNewFile();
         cam2Movie2.createNewFile();
         final ArrayList<File> expectedFiles = Lists.newArrayList(cam1Movie1, cam2Movie1, cam1Movie2, cam2Movie2);
@@ -153,26 +149,29 @@ public class MovieFileManagerIT {
     }
 
     @Test
-    public void shouldAddMovie() throws IOException {
+    public void shouldAddMovie() throws Exception {
         final Camera camera = readCameraConfig().getCameras().get(0);
-        final DcsFile dcsFile = Fixtures.randomDcsFile();
+        final File file = Fixtures.randomFile();
+        final UUID id = UUID.randomUUID();
+        writeFileIdentity(file, id);
         movieFileManager.addMoviesToRotatingPool(camera,
-                                                 Lists.newArrayList(dcsFile));
+                                                 Lists.newArrayList(file));
 
         final List<Movie> movies = movieFileManager.listAllMovies();
         assertThat(movies, hasSize(1));
-        assertThat(movies.get(0).getMovieFile().getAbsolutePath(),
-                   endsWith("/rotating/" + camera.getName() + "/" +
-                                    movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
         assertThat(movies.get(0).getMovieFile().exists(), is(true));
+
+        assertThat(readFileIdentity(movies.get(0).getMovieFile()), is(id));
     }
 
     @Test
     public void shouldSaveMovieMovingItFromRotatingToSavedStorage() throws IOException {
         final Camera camera = readCameraConfig().getCameras().get(0);
-        final DcsFile dcsFile = Fixtures.randomDcsFile();
+        final File file = Fixtures.randomFile();
+        final UUID id = UUID.randomUUID();
+        writeFileIdentity(file, id);
         movieFileManager.addMoviesToRotatingPool(camera,
-                                                 Lists.newArrayList(dcsFile));
+                                                 Lists.newArrayList(file));
 
         final List<Movie> rotatingMovies = movieFileManager.listRotatingMovies();
         assertThat(rotatingMovies, hasSize(1));
@@ -180,9 +179,7 @@ public class MovieFileManagerIT {
         movieFileManager.moveRotatingPoolVideoToSavedPool(rotatingMovies.get(0));
         final List<Movie> savedMovies = movieFileManager.listSavedMovies();
         assertThat(savedMovies, hasSize(1));
-        assertThat(savedMovies.get(0).getMovieFile().getAbsolutePath(),
-                   endsWith("/saved/" + camera.getName() + "/" +
-                                    movieFileNameFor(dcsFile.getCreatedInstant(), "mp4")));
+        assertThat(readFileIdentity(savedMovies.get(0).getMovieFile()), is(id));
     }
 
     @Test
@@ -220,20 +217,20 @@ public class MovieFileManagerIT {
     }
 
     @Test
-    public void shouldListMoviesSinceInstant() throws IOException {
-        final List<DcsFile> dcsFiles =
+    public void shouldListMoviesSinceInstant() {
+        final List<File> files =
                 IntStream.range(0, 5)
-                         .mapToObj(i -> Fixtures.randomDcsFile())
+                         .mapToObj(i -> Fixtures.randomFile())
                          .distinct()
                          .collect(toList());
 
-        movieFileManager.addMoviesToRotatingPool(camera, dcsFiles);
+        final Instant oldestInstant = files.stream()
+                                           .map(MovieFileManager::createdInstantForFile)
+                                           .sorted()
+                                           .findFirst()
+                                           .orElseThrow(() -> new RuntimeException("herp derp"));
 
-        final Instant oldestInstant = dcsFiles.stream()
-                                              .sorted(Comparator.comparing(DcsFile::getCreatedInstant))
-                                              .map(DcsFile::getCreatedInstant)
-                                              .findFirst()
-                                              .get();
+        movieFileManager.addMoviesToRotatingPool(camera, files);
 
         assertThat(movieFileManager.getMoviesInRange(Instant.now(), Instant.now()), is(empty()));
         assertThat(movieFileManager.getMoviesInRange(oldestInstant, Instant.now()), hasSize(5));
@@ -241,7 +238,7 @@ public class MovieFileManagerIT {
 
     @Test
     public void shouldHavePosterImageWithMovie() throws IOException {
-        final DcsFile file = Fixtures.randomDcsFile();
+        final File file = Fixtures.randomFile();
         movieFileManager.addMoviesToRotatingPool(camera, Lists.newArrayList(file));
 
         final List<Movie> movies = movieFileManager.getMoviesInRange(Instant.EPOCH, Instant.now());
@@ -253,9 +250,9 @@ public class MovieFileManagerIT {
 
     @Test
     public void shouldFindMovieForCamera() {
-        final List<DcsFile> files = IntStream.range(0, 10)
-                                             .mapToObj(i -> Fixtures.randomDcsFile())
-                                             .collect(toList());
+        final List<File> files = IntStream.range(0, 10)
+                                          .mapToObj(i -> Fixtures.randomFile())
+                                          .collect(toList());
 
         movieFileManager.addMoviesToRotatingPool(camera, files);
         final List<Movie> allMovies = movieFileManager.getMoviesInRange(Instant.EPOCH, Instant.now());
@@ -269,5 +266,34 @@ public class MovieFileManagerIT {
         assertThat(savedMovie.getMovieFile().getParentFile().getParentFile().getName(), is("saved"));
 
         assertThat(movieFileManager.findMovie(camera, allMovies.get(4).getName()).get(), is(allMovies.get(4)));
+    }
+
+    private UUID readFileIdentity(final File movieFile) throws IOException {
+        try (final BufferedReader reader = new BufferedReader(new FileReader(movieFile))) {
+            return UUID.fromString(reader.readLine());
+        }
+    }
+
+    private void writeFileIdentity(final File file, final UUID id) throws IOException {
+        try (final BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(id.toString());
+            writer.newLine();
+        }
+    }
+
+    private void recurseDelete(final File file) {
+        final File[] files = file.listFiles();
+        if (files == null) {
+            if (!file.delete()) {
+                throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
+            }
+            return;
+        }
+
+        Arrays.stream(files)
+              .forEach(this::recurseDelete);
+        if (!file.delete()) {
+            throw new IllegalStateException("Could not delete file: " + file.getAbsolutePath());
+        }
     }
 }
