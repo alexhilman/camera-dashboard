@@ -134,10 +134,11 @@ public class MotionProcessor {
                                             LOG.info("Motion ceased on {}", camera.getName());
                                             frameRecorder.record(frame);
                                             frameRecorder.close();
+
+                                            frameRecorder = null;
+                                            Optional.ofNullable(listener)
+                                                    .ifPresent(l -> l.motionObserved(camera, motionVideo.get()));
                                         }
-                                        frameRecorder = null;
-                                        Optional.ofNullable(listener)
-                                                .ifPresent(l -> l.motionObserved(camera, motionVideo.get()));
                                     }
                                 }
 
