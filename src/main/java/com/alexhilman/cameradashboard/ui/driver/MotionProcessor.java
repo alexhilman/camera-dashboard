@@ -24,8 +24,10 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.google.common.base.Preconditions.checkNotNull;
 import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
 import static org.bytedeco.javacpp.opencv_core.cvCountNonZero;
 
@@ -41,12 +43,14 @@ public class MotionProcessor {
     }
 
     private final Camera camera;
+    private final File tmpFolder;
 
     private volatile ObservableInputStream cameraStream;
     private volatile MotionCaptureListener listener;
 
-    public MotionProcessor(final Camera camera) {
+    public MotionProcessor(final Camera camera, final File tmpFolder) {
         this.camera = camera;
+        this.tmpFolder = tmpFolder;
     }
 
     public void processStream() throws Exception {
@@ -110,7 +114,7 @@ public class MotionProcessor {
                                     cooloffFrames = 0;
                                     if (frameRecorder == null) {
                                         LOG.info("Motion detected on {}", camera.getName());
-                                        motionVideo.set(new File("/tmp/motion-" + System.currentTimeMillis() + ".mp4"));
+                                        motionVideo.set(tmpFile());
                                         frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), 0);
                                         frameRecorder.setImageWidth(width);
                                         frameRecorder.setImageHeight(height);
@@ -150,8 +154,9 @@ public class MotionProcessor {
         }
     }
 
-    public void onMotionCaptured(final MotionCaptureListener listener) {
-        this.listener = listener;
+    public MotionProcessor onMotionCaptured(final MotionCaptureListener listener) {
+        this.listener = checkNotNull(listener, "listener cannot be null");
+        return this;
     }
 
     public InputStream observeStream() {
@@ -164,6 +169,10 @@ public class MotionProcessor {
         } catch (IOException e) {
             throw new RuntimeException("Cannot spawn observer", e);
         }
+    }
+
+    private File tmpFile() {
+        return new File(tmpFolder, UUID.randomUUID() + ".mp4");
     }
 
     private InputStream openStreamToCamera() throws IOException {

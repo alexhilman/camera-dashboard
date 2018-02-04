@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.File;
 import java.net.MalformedURLException;
 
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
@@ -19,8 +20,7 @@ public class MotionProcessorIT {
     @Before
     public void setup() throws MalformedURLException {
         camera = readCameraConfig().getCameras().get(0);
-        motionProcessor = new MotionProcessor(camera);
-
+        motionProcessor = new MotionProcessor(camera, new File(System.getProperty("tmp.dir")));
     }
 
     @Ignore("Could identify myself; not committing video")

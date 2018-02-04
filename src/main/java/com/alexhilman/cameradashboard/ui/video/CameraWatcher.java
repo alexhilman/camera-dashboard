@@ -46,10 +46,12 @@ public class CameraWatcher {
                 if (!running) {
                     getCameras().forEach(camera -> {
                         executorService.submit(() -> {
-                            final MotionProcessor motionProcessor = new MotionProcessor(camera);
-                            motionProcessor.onMotionCaptured((c, motionFile) -> {
-                                movieFileManager.addMoviesToRotatingPool(c, Lists.newArrayList(motionFile));
-                            });
+                            final MotionProcessor motionProcessor =
+                                    new MotionProcessor(camera, movieFileManager.getTempFolderForCamera(camera))
+                                            .onMotionCaptured((c, motionFile) -> {
+                                                movieFileManager.addMoviesToRotatingPool(c,
+                                                                                         Lists.newArrayList(motionFile));
+                                            });
                             streamingDriversByCamera.put(camera, motionProcessor);
 
                             final Thread currentThread = Thread.currentThread();
@@ -72,13 +74,13 @@ public class CameraWatcher {
         return cameraConfiguration.getCameras();
     }
 
-    private String extensionForFile(final DcsFile file) {
-        return file.getFileName().substring(file.getFileName().lastIndexOf('.') + 1);
-    }
-
     public InputStream observe(final Camera camera) {
         LOG.info("Observing {}", camera.getName());
 
         return streamingDriversByCamera.get(camera).observeStream();
+    }
+
+    private String extensionForFile(final DcsFile file) {
+        return file.getFileName().substring(file.getFileName().lastIndexOf('.') + 1);
     }
 }
