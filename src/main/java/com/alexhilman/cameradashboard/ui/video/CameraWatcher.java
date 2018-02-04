@@ -4,6 +4,7 @@ import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.cameradashboard.ui.driver.MotionProcessor;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
+import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.logging.log4j.LogManager;
@@ -46,7 +47,9 @@ public class CameraWatcher {
                     getCameras().forEach(camera -> {
                         executorService.submit(() -> {
                             final MotionProcessor motionProcessor = new MotionProcessor(camera);
-
+                            motionProcessor.onMotionCaptured((c, motionFile) -> {
+                                movieFileManager.addMoviesToRotatingPool(c, Lists.newArrayList(motionFile));
+                            });
                             streamingDriversByCamera.put(camera, motionProcessor);
 
                             final Thread currentThread = Thread.currentThread();

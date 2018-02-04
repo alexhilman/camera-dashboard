@@ -23,6 +23,8 @@ import java.util.Base64;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
 import static org.bytedeco.javacpp.opencv_core.cvCountNonZero;
@@ -41,6 +43,7 @@ public class MotionProcessor {
     private final Camera camera;
 
     private volatile ObservableInputStream cameraStream;
+    private volatile MotionCaptureListener listener;
 
     public MotionProcessor(final Camera camera) {
         this.camera = camera;
@@ -61,9 +64,11 @@ public class MotionProcessor {
 
             final double frameRate = grabber.getFrameRate();
             LOG.debug("Frame rate: {}", frameRate);
-            final int numFrames = (int) (frameRate * 3);
+            final int numFramesForMargin = (int) (frameRate * 3);
             final List<Frame> threeSecondsOfFrames = new LinkedList<>();
             FFmpegFrameRecorder frameRecorder = null;
+            final AtomicReference<File> motionVideo = new AtomicReference<>(null);
+            int cooloffFrames = 0;
 
             final IntegerSampler integerSampler = IntegerSampler.forSamples(5);
             long framesSampled = 0;
@@ -75,7 +80,7 @@ public class MotionProcessor {
                 mog.setNMixtures(3);
 
                 while ((grab = converter.convert((frame = grabber.grab()))) != null) {
-                    if (threeSecondsOfFrames.size() >= numFrames) {
+                    if (threeSecondsOfFrames.size() >= numFramesForMargin) {
                         do {
                             threeSecondsOfFrames.remove(0);
                         } while (!threeSecondsOfFrames.get(0).keyFrame);
@@ -102,11 +107,11 @@ public class MotionProcessor {
                         if (framesSampled > 5) {
                             try {
                                 if (percentMotion > 1.0) {
+                                    cooloffFrames = 0;
                                     if (frameRecorder == null) {
                                         LOG.info("Motion detected on {}", camera.getName());
-                                        frameRecorder = new FFmpegFrameRecorder(
-                                                new File("/tmp/motion-" + System.currentTimeMillis() + ".mp4"),
-                                                0);
+                                        motionVideo.set(new File("/tmp/motion-" + System.currentTimeMillis() + ".mp4"));
+                                        frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), 0);
                                         frameRecorder.setImageWidth(width);
                                         frameRecorder.setImageHeight(height);
                                         frameRecorder.setFrameRate(frameRate);
@@ -118,15 +123,22 @@ public class MotionProcessor {
                                             frameRecorder.record(threeSecondsOfFrames.remove(0));
                                         }
                                     }
-
-                                    frameRecorder.record(frame);
                                 } else {
-                                    if (frameRecorder != null) {
-                                        LOG.info("Motion ceased on {}", camera.getName());
-                                        frameRecorder.record(frame);
-                                        frameRecorder.close();
+                                    cooloffFrames++;
+                                    if (cooloffFrames > numFramesForMargin) {
+                                        if (frameRecorder != null) {
+                                            LOG.info("Motion ceased on {}", camera.getName());
+                                            frameRecorder.record(frame);
+                                            frameRecorder.close();
+                                        }
+                                        frameRecorder = null;
+                                        Optional.ofNullable(listener)
+                                                .ifPresent(l -> l.motionObserved(camera, motionVideo.get()));
                                     }
-                                    frameRecorder = null;
+                                }
+
+                                if (frameRecorder != null) {
+                                    frameRecorder.record(frame);
                                 }
                             } catch (FrameRecorder.Exception e) {
                                 LOG.warn("Could not motion frame to file", e);
@@ -135,6 +147,22 @@ public class MotionProcessor {
                     }
                 }
             }
+        }
+    }
+
+    public void onMotionCaptured(final MotionCaptureListener listener) {
+        this.listener = listener;
+    }
+
+    public InputStream observeStream() {
+        final ObservableInputStream cameraStream = this.cameraStream;
+        if (cameraStream == null) {
+            throw new RuntimeException("Camera stream is not operational");
+        }
+        try {
+            return cameraStream.newObserver();
+        } catch (IOException e) {
+            throw new RuntimeException("Cannot spawn observer", e);
         }
     }
 
@@ -157,15 +185,8 @@ public class MotionProcessor {
         return cameraStream;
     }
 
-    public InputStream observeStream() {
-        final ObservableInputStream cameraStream = this.cameraStream;
-        if (cameraStream == null) {
-            throw new RuntimeException("Camera stream is not operational");
-        }
-        try {
-            return cameraStream.newObserver();
-        } catch (IOException e) {
-            throw new RuntimeException("Cannot spawn observer", e);
-        }
+    @FunctionalInterface
+    public interface MotionCaptureListener {
+        void motionObserved(final Camera camera, final File motionVideo);
     }
 }
