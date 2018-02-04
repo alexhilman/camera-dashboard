@@ -19,7 +19,13 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Queue;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -169,10 +175,9 @@ public class MovieFileManager {
                     .blockingGet()
                     .forEach(tmpFile -> {
                         final File newFile = new File(rotatingPool, tmpFile.getName());
-                        LOG.info("Adding new movie {} to rotating pool for camera {} at {}",
+                        LOG.info("Adding new movie {} to rotating pool for camera {}",
                                  tmpFile.getName(),
-                                 camera.getName(),
-                                 camera.getNetworkAddress());
+                                 camera.getName());
 
                         if (!tmpFile.renameTo(newFile)) {
                             throw new RuntimeException("Could not move file to rotating pool");
@@ -274,13 +279,8 @@ public class MovieFileManager {
                                                            .findFirst();
 
         if (!camera.isPresent()) {
-            LOG.info(
-                    "No camera configuration found for {}; using a dummy configuration instead",
-                    cameraName);
-            return new Camera(cameraName,
-                              "http://localhost",
-                              "admin",
-                              "password");
+            throw new RuntimeException("Could not find camera for file");
+            // TODO figure out what to do with removed or renamed cameras later
         }
         return camera.get();
     }

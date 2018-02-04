@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="INFO">
+<Configuration>
     <Properties>
         <Property name="filename">/var/log/camera-dashboard/camera-dashboard.log</Property>
     </Properties>
-    <ThresholdFilter level="INFO"/>
+    <!--<ThresholdFilter level="INFO"/>-->
 
     <Appenders>
         <Console name="STDOUT">
@@ -16,9 +16,13 @@
         </File>
     </Appenders>
     <Loggers>
-        <Root level="trace">
+        <Root level="info">
             <AppenderRef ref="STDOUT"/>
             <AppenderRef ref="File"/>
         </Root>
+        <Logger name="com.alexhilman.cameradashboard.ui.driver" level="DEBUG" additivity="false">
+            <AppenderRef ref="STDOUT"/>
+            <AppenderRef ref="File"/>
+        </Logger>
     </Loggers>
 </Configuration>

@@ -2,7 +2,7 @@ package com.alexhilman.cameradashboard.ui.video;
 
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
-import com.alexhilman.cameradashboard.ui.driver.StreamingDriver;
+import com.alexhilman.cameradashboard.ui.driver.MotionProcessor;
 import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -10,8 +10,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -29,7 +27,7 @@ public class CameraWatcher {
     private final CameraConfiguration cameraConfiguration;
     private final MovieFileManager movieFileManager;
     private final ExecutorService executorService = Executors.newCachedThreadPool();
-    private final ConcurrentMap<Camera, StreamingDriver> streamingDriversByCamera = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Camera, MotionProcessor> streamingDriversByCamera = new ConcurrentHashMap<>();
     private volatile boolean running;
 
     @Inject
@@ -47,22 +45,14 @@ public class CameraWatcher {
                 if (!running) {
                     getCameras().forEach(camera -> {
                         executorService.submit(() -> {
-                            final StreamingDriver streamingDriver;
-                            try {
-                                streamingDriver =
-                                        new StreamingDriver(new URL(camera.getNetworkAddress()),
-                                                            camera.getUsername(),
-                                                            camera.getPassword());
-                            } catch (MalformedURLException e) {
-                                throw new RuntimeException("Invalid configuration for " + camera.getName(), e);
-                            }
+                            final MotionProcessor motionProcessor = new MotionProcessor(camera);
 
-                            streamingDriversByCamera.put(camera, streamingDriver);
+                            streamingDriversByCamera.put(camera, motionProcessor);
 
                             final Thread currentThread = Thread.currentThread();
                             while (!currentThread.isInterrupted()) {
                                 try {
-                                    streamingDriver.processStream();
+                                    motionProcessor.processStream();
                                 } catch (Exception e) {
                                     LOG.error("Encountered error while processing camera video stream", e);
                                 }

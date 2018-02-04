@@ -8,26 +8,24 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.net.MalformedURLException;
-import java.net.URL;
 
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 
-public class StreamingDriverIT {
-    private static final Logger LOG = LogManager.getLogger(StreamingDriverIT.class);
-    private StreamingDriver streamingDriver;
+public class MotionProcessorIT {
+    private static final Logger LOG = LogManager.getLogger(MotionProcessorIT.class);
+    private MotionProcessor motionProcessor;
+    private Camera camera;
 
     @Before
     public void setup() throws MalformedURLException {
-        final Camera camera = readCameraConfig().getCameras().get(0);
-        streamingDriver = new StreamingDriver(new URL(camera.getNetworkAddress()),
-                                              camera.getUsername(),
-                                              camera.getPassword());
+        camera = readCameraConfig().getCameras().get(0);
+        motionProcessor = new MotionProcessor(camera);
 
     }
 
     @Ignore("Could identify myself; not committing video")
     @Test
     public void shouldSortMoviesWithMotion() throws Exception {
-        streamingDriver.processStream();
+        motionProcessor.processStream();
     }
 }
