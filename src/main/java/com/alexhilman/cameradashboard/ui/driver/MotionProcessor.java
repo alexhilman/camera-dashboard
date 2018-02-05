@@ -76,6 +76,8 @@ public class MotionProcessor {
 
             final IntegerSampler integerSampler = IntegerSampler.forSamples(5);
             long framesSampled = 0;
+            long framesCaptured = 1;
+            double percentMotion = 0;
 
             try (opencv_core.IplImage fgMask = opencv_core.IplImage.create(width, height, IPL_DEPTH_8U, 1);
                  opencv_core.IplImage background = opencv_core.IplImage.create(width, height, IPL_DEPTH_8U, 3);
@@ -91,63 +93,66 @@ public class MotionProcessor {
                     }
                     threeSecondsOfFrames.add(frame.clone());
 
-                    try (final opencv_core.Mat imageMat = new opencv_core.Mat(grab);
-                         final opencv_core.Mat fgMaskMat = new opencv_core.Mat(fgMask);
-                         final opencv_core.Mat backgroundMat = new opencv_core.Mat(background)) {
-                        mog.apply(imageMat, fgMaskMat, .1);  // -1);
+                    if (++framesCaptured % 3 == 0) {
+                        try (final opencv_core.Mat imageMat = new opencv_core.Mat(grab);
+                             final opencv_core.Mat fgMaskMat = new opencv_core.Mat(fgMask);
+                             final opencv_core.Mat backgroundMat = new opencv_core.Mat(background)) {
+                            mog.apply(imageMat, fgMaskMat, .1);  // -1);
 
-                        mog.getBackgroundImage(backgroundMat);
-                        final int nonZero = cvCountNonZero(fgMask);
-                        integerSampler.sample(nonZero);
-                        framesSampled++;
-                        final int average = integerSampler.average();
-                        final double percentMotion = (double) average / (double) pixelsPerFrame * 100.0;
+                            mog.getBackgroundImage(backgroundMat);
+                            final int nonZero = cvCountNonZero(fgMask);
+                            integerSampler.sample(nonZero);
+                            framesSampled++;
+                            final int average = integerSampler.average();
+                            percentMotion = (double) average / (double) pixelsPerFrame * 100.0;
 //                        LOG.debug("Timeline {}: average motion pixels: {}; pixels in motion: {}%",
 //                                  decimalFormat.format(grabber.getTimestamp() / 1000000.0),
 //                                  intFormat.format(average),
 //                                  decimalFormat.format(percentMotion));
 
-                        // If int average of motion pixels is > 1% then we start recording
-                        if (framesSampled > 5) {
-                            try {
-                                if (percentMotion > 1.0) {
-                                    cooloffFrames = 0;
-                                    if (frameRecorder == null) {
-                                        LOG.info("Motion detected on {}", camera.getName());
-                                        motionVideo.set(tmpFile());
-                                        frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), 0);
-                                        frameRecorder.setImageWidth(width);
-                                        frameRecorder.setImageHeight(height);
-                                        frameRecorder.setFrameRate(frameRate);
-                                        frameRecorder.setAudioChannels(0);
-                                        frameRecorder.setFormat(grabber.getFormat());
-                                        frameRecorder.start();
+                            // If int average of motion pixels is > 1% then we start recording
+                        }
+                    }
 
-                                        while (!threeSecondsOfFrames.isEmpty()) {
-                                            frameRecorder.record(threeSecondsOfFrames.remove(0));
-                                        }
-                                    }
-                                } else {
-                                    cooloffFrames++;
-                                    if (cooloffFrames > numFramesForMargin) {
-                                        if (frameRecorder != null) {
-                                            LOG.info("Motion ceased on {}", camera.getName());
-                                            frameRecorder.record(frame);
-                                            frameRecorder.close();
+                    if (framesSampled > 5) {
+                        try {
+                            if (percentMotion > 1.0) {
+                                cooloffFrames = 0;
+                                if (frameRecorder == null) {
+                                    LOG.info("Motion detected on {}", camera.getName());
+                                    motionVideo.set(tmpFile());
+                                    frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), 0);
+                                    frameRecorder.setImageWidth(width);
+                                    frameRecorder.setImageHeight(height);
+                                    frameRecorder.setFrameRate(frameRate);
+                                    frameRecorder.setAudioChannels(0);
+                                    frameRecorder.setFormat(grabber.getFormat());
+                                    frameRecorder.start();
 
-                                            frameRecorder = null;
-                                            Optional.ofNullable(listener)
-                                                    .ifPresent(l -> l.motionObserved(camera, motionVideo.get()));
-                                        }
+                                    while (!threeSecondsOfFrames.isEmpty()) {
+                                        frameRecorder.record(threeSecondsOfFrames.remove(0));
                                     }
                                 }
+                            } else {
+                                cooloffFrames++;
+                                if (cooloffFrames > numFramesForMargin) {
+                                    if (frameRecorder != null) {
+                                        LOG.info("Motion ceased on {}", camera.getName());
+                                        frameRecorder.record(frame);
+                                        frameRecorder.close();
 
-                                if (frameRecorder != null) {
-                                    frameRecorder.record(frame);
+                                        frameRecorder = null;
+                                        Optional.ofNullable(listener)
+                                                .ifPresent(l -> l.motionObserved(camera, motionVideo.get()));
+                                    }
                                 }
-                            } catch (FrameRecorder.Exception e) {
-                                LOG.warn("Could not motion frame to file", e);
                             }
+
+                            if (frameRecorder != null) {
+                                frameRecorder.record(frame);
+                            }
+                        } catch (FrameRecorder.Exception e) {
+                            LOG.warn("Could not motion frame to file", e);
                         }
                     }
                 }
