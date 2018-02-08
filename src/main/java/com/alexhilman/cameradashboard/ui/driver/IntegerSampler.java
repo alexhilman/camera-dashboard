@@ -9,21 +9,10 @@ import javax.annotation.concurrent.NotThreadSafe;
 public class IntegerSampler {
     private final int[] motionPixelsByFrame;
     private int currentPointer;
+    private boolean full;
 
     IntegerSampler(final int slots) {
         this.motionPixelsByFrame = new int[slots];
-    }
-
-    /**
-     * Sets the oldest slot in the sampler to the specified number.
-     *
-     * @param num
-     */
-    public void sample(final int num) {
-        motionPixelsByFrame[currentPointer++] = num;
-        if (currentPointer >= motionPixelsByFrame.length) {
-            currentPointer = 0;
-        }
     }
 
     /**
@@ -37,6 +26,19 @@ public class IntegerSampler {
     }
 
     /**
+     * Sets the oldest slot in the sampler to the specified number.
+     *
+     * @param num Sample an integer
+     */
+    public void sample(final int num) {
+        motionPixelsByFrame[currentPointer++] = num;
+        if (currentPointer >= motionPixelsByFrame.length) {
+            currentPointer = 0;
+            full = true;
+        }
+    }
+
+    /**
      * Calculate the current average of integers in the slots.
      *
      * @return Average value
@@ -47,5 +49,15 @@ public class IntegerSampler {
             sum += motionPixelsByFrame[i];
         }
         return Math.toIntExact(sum / motionPixelsByFrame.length);
+    }
+
+    /**
+     * True if the given slots are all used. If this is the case the oldest slot will be overwritten on the next {@link
+     * #sample(int)}.
+     *
+     * @return True if all slots are used
+     */
+    public boolean isFull() {
+        return full;
     }
 }
