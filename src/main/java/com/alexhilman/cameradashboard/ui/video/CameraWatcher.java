@@ -3,7 +3,6 @@ package com.alexhilman.cameradashboard.ui.video;
 import com.alexhilman.cameradashboard.ui.conf.Camera;
 import com.alexhilman.cameradashboard.ui.conf.CameraConfiguration;
 import com.alexhilman.cameradashboard.ui.driver.MotionProcessor;
-import com.alexhilman.dlink.dcs936.model.DcsFile;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -78,9 +77,5 @@ public class CameraWatcher {
         LOG.info("Observing {}", camera.getName());
 
         return streamingDriversByCamera.get(camera).observeStream();
-    }
-
-    private String extensionForFile(final DcsFile file) {
-        return file.getFileName().substring(file.getFileName().lastIndexOf('.') + 1);
     }
 }
