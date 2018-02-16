@@ -84,7 +84,7 @@ public class Dashboard implements View {
 
     @Override
     public void beforeLeave(final ViewBeforeLeaveEvent event) {
-        executorService.shutdownNow();
+//        executorService.shutdownNow();
     }
 
     @Override

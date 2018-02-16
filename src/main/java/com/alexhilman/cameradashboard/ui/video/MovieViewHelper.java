@@ -8,7 +8,12 @@ import com.vaadin.server.ExternalResource;
 import com.vaadin.server.Resource;
 import com.vaadin.server.Sizeable;
 import com.vaadin.shared.ui.ContentMode;
-import com.vaadin.ui.*;
+import com.vaadin.ui.Component;
+import com.vaadin.ui.GridLayout;
+import com.vaadin.ui.HorizontalLayout;
+import com.vaadin.ui.Image;
+import com.vaadin.ui.Label;
+import com.vaadin.ui.VerticalLayout;
 
 import java.io.File;
 import java.io.UnsupportedEncodingException;
@@ -30,7 +35,7 @@ import static java.util.stream.Collectors.toList;
 @Singleton
 public class MovieViewHelper {
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.US);
-    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("h:m:s a");
+    private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("hh:mm:ss a");
 
     private final MovieFileManager movieFileManager;
     private final MovieHelper movieHelper;
@@ -70,7 +75,8 @@ public class MovieViewHelper {
                          final Image image = new Image(null, posterResourceFor(movie));
                          image.setSizeFull();
                          image.addClickListener(event -> {
-                             ClassNavigator.navigateTo(WatchMovie.class, movieContextPathFor(movie));
+                             final String encodedParameters = movieContextPathFor(movie);
+                             ClassNavigator.navigateTo(WatchMovie.class, encodedParameters);
                          });
                          posterLayout.addComponent(image);
 
