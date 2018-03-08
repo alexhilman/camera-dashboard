@@ -113,15 +113,20 @@ public class MotionProcessor {
                             if (motionDetected && frameRecorder == null) {
                                 LOG.info("Motion detected on {}", camera.getName());
                                 motionVideo.set(tmpFile());
-                                frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), 0);
-                                frameRecorder.setImageWidth(width);
-                                frameRecorder.setImageHeight(height);
-                                frameRecorder.setFrameRate(frameRate);
-                                frameRecorder.setAudioChannels(0);
+                                frameRecorder = new FFmpegFrameRecorder(motionVideo.get(), width, height,0);
+                                frameRecorder.setTimestamp(0);
+                                frameRecorder.setAspectRatio(grabber.getAspectRatio());
                                 frameRecorder.setFormat(grabber.getFormat());
+                                frameRecorder.setVideoBitrate(grabber.getVideoBitrate());
+                                frameRecorder.setVideoCodec(grabber.getVideoCodec());
+                                frameRecorder.setFormat(grabber.getFormat());
+                                frameRecorder.setFrameRate(frameRate);
+                                frameRecorder.setSampleFormat(grabber.getSampleFormat());
+                                frameRecorder.setSampleRate(grabber.getSampleRate());
                                 frameRecorder.start();
 
                                 for (final Frame f : startingFrameBuffer) {
+                                    LOG.info("Recording frame {} @ {}us", frameRecorder.getTimestamp());
                                     frameRecorder.record(f);
                                 }
                                 startingFrameBuffer.clear();
@@ -133,13 +138,15 @@ public class MotionProcessor {
                         try {
                             if (motionDetected) {
                                 cooloffFrames = 0;
+                                LOG.info("Recording frame @ {}us", frameRecorder.getTimestamp());
                                 frameRecorder.record(frame);
                             } else {
                                 cooloffFrames++;
                                 if (cooloffFrames > numFramesForMargin) {
                                     if (frameRecorder != null) {
-                                        LOG.info("Motion ceased on {}", camera.getName());
+                                        LOG.info("Recording frame @ {}us", frameRecorder.getTimestamp());
                                         frameRecorder.record(frame);
+                                        LOG.info("Motion ceased on {}", camera.getName());
                                         frameRecorder.close();
 
                                         frameRecorder = null;
@@ -154,11 +161,12 @@ public class MotionProcessor {
                                     }
                                     startingFrameBuffer.add(frame.clone());
                                 } else if (frameRecorder != null) {
+                                    LOG.info("Recording frame @ {}us", frameRecorder.getTimestamp());
                                     frameRecorder.record(frame);
                                 }
                             }
                         } catch (FrameRecorder.Exception e) {
-                            LOG.warn("Could not motion frame to file", e);
+                            LOG.warn("Could not add motion frame to file", e);
                         }
                     }
                 }
