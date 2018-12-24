@@ -383,7 +383,7 @@ public class MovieFileManager {
         return file.getName().substring(0, file.getName().lastIndexOf('.'));
     }
 
-    File getTempFolderForCamera(final Camera camera) {
+    public File getTempFolderForCamera(final Camera camera) {
         final File file = new File(getDownloadingDirectory(), camera.getName());
         mkDirsIfMissing(file);
         return file;
