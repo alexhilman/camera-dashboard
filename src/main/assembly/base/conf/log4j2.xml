@@ -7,22 +7,26 @@
 
     <Appenders>
         <Console name="STDOUT">
-            <PatternLayout pattern="%d %p [%t] %c{1.}: %m %ex%n"/>
-        </Console>
-        <File name="File" fileName="${filename}">
             <PatternLayout>
-                <pattern>%d %p [%t] %c{1.}: %m %ex%n</pattern>
+                <Pattern>%d{DEFAULT} [%t] %p [%c{1.}]: %m%ex%n</Pattern>
             </PatternLayout>
-        </File>
+        </Console>
+        <RollingFile name="File" fileName="log/all.log" filePattern="log/all-%d{yyyy-MM-dd}.log.gz">
+            <PatternLayout>
+                <Pattern>%d{DEFAULT} [%t] %p [%c{1.}]: %m%ex%n</Pattern>
+            </PatternLayout>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+            </Policies>
+        </RollingFile>
     </Appenders>
     <Loggers>
         <Root level="info">
             <AppenderRef ref="STDOUT"/>
             <AppenderRef ref="File"/>
         </Root>
-        <Logger name="com.alexhilman.cameradashboard.ui.driver" level="DEBUG" additivity="false">
-            <AppenderRef ref="STDOUT"/>
-            <AppenderRef ref="File"/>
-        </Logger>
+        <Logger name="org.eclipse.jetty.annotations.AnnotationParser" level="error"/>
+        <Logger name="com.alexhilman.cameradashboard.ui.driver" level="DEBUG"/>
+        <Logger name="org.subethamail.smtp" level="debug"/>
     </Loggers>
 </Configuration>
