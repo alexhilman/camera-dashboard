@@ -135,6 +135,11 @@
             <artifactId>flow-guice-addon</artifactId>
             <version>2.3.6-vaadin10</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.appreciated</groupId>
+            <artifactId>app-layout-addon</artifactId>
+            <version>2.0.0</version>
+        </dependency>
 
         <dependency>
             <groupId>io.reactivex.rxjava2</groupId>
