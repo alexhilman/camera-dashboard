@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="info" strict="true" name="nsfs">
+    <Filter type="ThresholdFilter" level="debug"/>
+
+    <Appenders>
+        <Console name="STDOUT">
+            <PatternLayout>
+                <Pattern>%d{DEFAULT} [%t] %p [%c{1.}]: %m%ex%n</Pattern>
+            </PatternLayout>
+        </Console>
+    </Appenders>
+
+    <Loggers>
+        <Root level="debug">
+            <AppenderRef ref="STDOUT"/>
+        </Root>
+        <Logger name="org.eclipse.jetty.annotations.AnnotationParser" level="error"/>
+        <!--<Logger name="com.foo.bar" level="debug"/> -->
+    </Loggers>
+
+</Configuration>
