@@ -4,6 +4,7 @@ import com.alexhilman.cameradashboard.ui.inject.CameraDashboardModule;
 import com.google.inject.Injector;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.page.Push;
+import com.vaadin.flow.server.VaadinRequest;
 import com.vaadin.flow.server.VaadinServletConfiguration;
 import com.vaadin.flow.shared.communication.PushMode;
 import com.vaadin.flow.shared.ui.Transport;
@@ -47,5 +48,10 @@ public class MyVaadinUI extends UI {
                 throw new IllegalStateException("No injector", e);
             }
         }
+    }
+
+    @Override
+    protected void init(final VaadinRequest request) {
+        super.init(request);
     }
 }

@@ -40,6 +40,8 @@ public class App {
     private static volatile Properties cameraDashboardProperties;
 
     public static void main(String[] args) throws Exception {
+        validateStateOrThrow();
+
         Resource.setDefaultUseCaches(false);
 
         final Server server = new Server(PORT);
