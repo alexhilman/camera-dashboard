@@ -35,6 +35,10 @@ public class MailStreamParser {
                     inHeaders = false;
                     continue;
                 }
+
+                if (line.startsWith("        ")) {
+                    continue;
+                }
                 final Header header = Header.of(line);
                 if (isContentTypeHeader(header)) {
                     if (isMultipartMixed(header)) {

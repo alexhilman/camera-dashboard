@@ -10,8 +10,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.subethamail.smtp.client.SmartClient;
 
-import java.util.concurrent.TimeUnit;
-
 import static com.alexhilman.cameradashboard.ui.CameraConfigurationReader.readCameraConfig;
 
 public class MailServerIT {
@@ -26,8 +24,9 @@ public class MailServerIT {
         final CameraConfiguration cameraConfiguration = readCameraConfig();
         camera = cameraConfiguration.getCameras().get(0);
         movieFileManager = new MovieFileManager(cameraConfiguration, new MovieHelper(), "/tmp/.camera-dashboard");
-        messageHandlerFactory = new MessageHandlerFactory(movieFileManager, EMAIL_ADDRESS, cameraConfiguration);
-        mailServer = new MailServer(messageHandlerFactory, 2501);
+        messageHandlerFactory =
+                new MessageHandlerFactory(new MailStreamParser(), movieFileManager, EMAIL_ADDRESS, cameraConfiguration);
+        mailServer = new MailServer(messageHandlerFactory, 5870);
 
         mailServer.start();
     }
@@ -56,6 +55,6 @@ public class MailServerIT {
     @Test
     @Ignore
     public void shouldStayRunning() throws InterruptedException {
-        Thread.sleep(TimeUnit.HOURS.toMillis(1));
+        Thread.sleep(Long.MAX_VALUE);
     }
 }
