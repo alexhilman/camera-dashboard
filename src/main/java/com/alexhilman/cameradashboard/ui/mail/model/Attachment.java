@@ -1,42 +1,57 @@
 package com.alexhilman.cameradashboard.ui.mail.model;
 
-import com.google.common.collect.Lists;
-
-import java.util.List;
+import java.util.Arrays;
+import java.util.Objects;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ *
  */
 public class Attachment {
-    private final List<Header> headers;
+    private final String fileName;
+    private final byte[] content;
 
-    private Attachment(final Builder builder) {headers = builder.headers;}
+    public Attachment(final String fileName, final byte[] content) {
+        this.fileName = fileName;
+        checkNotNull(content, "content cannot be null");
 
-    public List<Header> getHeaders() {
-        return headers;
+        this.content = Arrays.copyOf(content, content.length);
     }
 
+    private Attachment(final Builder builder) {
+        this(builder.fileName, builder.content);
+    }
 
-    public static final class Builder {
-        private List<Header> headers = Lists.newArrayListWithCapacity(5);
+    public String getFileName() {
+        return fileName;
+    }
 
-        private Builder() {}
+    public byte[] getContent() {
+        return Arrays.copyOf(content, content.length);
+    }
 
-        public Builder addHeader(final Header header) {
-            checkNotNull(header, "header cannot be null");
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(fileName);
+        result = 31 * result + Arrays.hashCode(content);
+        return result;
+    }
 
-            headers.add(header);
-            return this;
-        }
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        final Attachment that = (Attachment) o;
+        return Objects.equals(fileName, that.fileName) &&
+                Arrays.equals(content, that.content);
+    }
 
-        public Attachment build() {
-            return new Attachment(this);
-        }
-
-        public List<Header> getHeaders() {
-            return headers;
-        }
+    @Override
+    public String toString() {
+        return "Attachment{" +
+                "fileName='" + fileName + '\'' +
+                '}';
     }
 
     public static Builder newBuilder() {
@@ -45,7 +60,30 @@ public class Attachment {
 
     public static Builder newBuilder(final Attachment copy) {
         Builder builder = new Builder();
-        builder.headers = copy.getHeaders();
+        builder.fileName = copy.getFileName();
+        builder.content = copy.getContent();
         return builder;
+    }
+
+
+    public static final class Builder {
+        private String fileName;
+        private byte[] content;
+
+        private Builder() {}
+
+        public Builder setFileName(final String fileName) {
+            this.fileName = fileName;
+            return this;
+        }
+
+        public Builder setContent(final byte[] content) {
+            this.content = content;
+            return this;
+        }
+
+        public Attachment build() {
+            return new Attachment(this);
+        }
     }
 }

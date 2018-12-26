@@ -8,6 +8,7 @@ import java.util.Objects;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
+ *
  */
 public class Email {
     private final List<Header> headers;
@@ -47,6 +48,18 @@ public class Email {
                 Objects.equals(attachments, email.attachments);
     }
 
+    public static Builder newBuilder() {
+        return new Builder();
+    }
+
+    public static Builder newBuilder(final Email copy) {
+        Builder builder = new Builder();
+        builder.headers = copy.getHeaders();
+        builder.body = copy.getBody();
+        builder.attachments = copy.getAttachments();
+        return builder;
+    }
+
     public static final class Builder {
         private List<Header> headers = Lists.newArrayListWithCapacity(5);
         private String body;
@@ -71,31 +84,29 @@ public class Email {
             return attachments;
         }
 
-        public Builder setAttachments(final List<Attachment> attachments) {
-            this.attachments = attachments;
+        public Builder addAttachments(final List<Attachment> attachments) {
+            this.attachments.addAll(attachments);
+            return this;
+        }
+
+        public Builder addHeader(final Header header) {
+            checkNotNull(header, "header cannot be null");
+
+            headers.add(header);
+
+            return this;
+        }
+
+        public Builder addPart(final Attachment attachment) {
+            checkNotNull(attachment, "part cannot be null");
+
+            attachments.add(attachment);
+
             return this;
         }
 
         public Email build() {
             return new Email(this);
         }
-
-        public void addHeader(final Header header) {
-            checkNotNull(header, "header cannot be null");
-
-            headers.add(header);
-        }
-    }
-
-    public static Builder newBuilder() {
-        return new Builder();
-    }
-
-    public static Builder newBuilder(final Email copy) {
-        Builder builder = new Builder();
-        builder.headers = copy.getHeaders();
-        builder.body = copy.getBody();
-        builder.attachments = copy.getAttachments();
-        return builder;
     }
 }

@@ -1,5 +1,6 @@
 package com.alexhilman.cameradashboard.ui.mail;
 
+import com.alexhilman.cameradashboard.ui.mail.model.Attachment;
 import com.alexhilman.cameradashboard.ui.mail.model.Email;
 import com.alexhilman.cameradashboard.ui.mail.model.Header;
 import com.sun.mail.smtp.SMTPMessage;
@@ -21,6 +22,7 @@ import java.util.stream.IntStream;
 import static java.util.stream.Collectors.joining;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -31,7 +33,7 @@ public class MailStreamParserTest {
 
     @Before
     public void setupMailResource() {
-        emailResource = getClass().getResource("/com/alexhilman/cameradashboard/mail/email.raw");
+        emailResource = getClass().getResource("/com/alexhilman/cameradashboard/mail/test-image-email.raw");
 
         assertThat(emailResource, is(notNullValue()));
     }
@@ -79,10 +81,10 @@ public class MailStreamParserTest {
 
         assertThat(email.getHeaders(),
                    hasItems(Header.of("Date: Thu, 08 Mar 2018 09:52:25 -0700"),
-                            Header.of("From: dcs-936l@earl.pi"),
+                            Header.of("From: dcs-936l@local.pi"),
                             Header.of("User-Agent: msmtp"),
                             Header.of("MIME-Version: 1.0"),
-                            Header.of("To: recording@earl.pi"),
+                            Header.of("To: recording@local.pi"),
                             Header.of("Subject: This is a snapshot test mail from DCS-936L"),
                             Header.of("Content-Type: multipart/mixed; boundary=\"00137867=\"")));
     }
@@ -97,6 +99,22 @@ public class MailStreamParserTest {
         assertThat(email.getBody(), is("Camera Name: DCS-936L\n" +
                                                "MAC Address: B0:C5:54:37:0E:92\n" +
                                                "IP Address: 192.168.1.4\n" +
-                                               "Time: 2018/03/08 09:52:25"));
+                                               "Time: 2018/03/08 09:52:25\n" +
+                                               "\n" +
+                                               "\n" +
+                                               "\n"));
+    }
+
+    @Test
+    public void shouldParseAttachment() throws IOException {
+        final Email email;
+        try (final InputStream in = emailResource.openStream()) {
+            email = mailStreamParser.parse(in);
+        }
+
+        assertThat(email.getAttachments(), hasSize(1));
+        final Attachment attachment = email.getAttachments().get(0);
+        assertThat(attachment.getFileName(), is("20180308_095225.jpg"));
+        assertThat(attachment.getContent().length, is(137867));
     }
 }
